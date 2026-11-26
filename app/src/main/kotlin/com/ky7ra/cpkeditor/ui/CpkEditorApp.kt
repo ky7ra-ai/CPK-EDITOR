@@ -94,6 +94,14 @@ fun CpkEditorApp(vm: CpkViewModel) {
         if (uri != null) vm.extractSingle(uri)
     }
 
+    val replaceFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) vm.replaceEntry(uri)
+    }
+    val onReplace: (String) -> Unit = { path ->
+        vm.prepareReplace(path)
+        replaceFile.launch(arrayOf("*/*"))
+    }
+
     val onExtract: (Set<String>?) -> Unit = { paths ->
         vm.prepareExtract(paths)
         if (paths != null && paths.size == 1) {
@@ -159,6 +167,7 @@ fun CpkEditorApp(vm: CpkViewModel) {
                     onAddFiles = { pickFiles.launch(arrayOf("*/*")) },
                     onAddFolder = { pickFolder.launch(null) },
                     onExtract = onExtract,
+                    onReplace = onReplace,
                     onDelete = { confirmDelete = true },
                 )
             }
@@ -259,6 +268,7 @@ private fun ArchiveScreen(
     onAddFiles: () -> Unit,
     onAddFolder: () -> Unit,
     onExtract: (Set<String>?) -> Unit,
+    onReplace: (String) -> Unit,
     onDelete: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -347,6 +357,11 @@ private fun ArchiveScreen(
                     if (state.selected.isNotEmpty()) {
                         Button(onClick = { onExtract(state.selected) }, enabled = !busy) {
                             Text(stringResource(R.string.action_extract))
+                        }
+                        if (state.selected.size == 1) {
+                            OutlinedButton(onClick = { onReplace(state.selected.first()) }, enabled = !busy) {
+                                Text(stringResource(R.string.action_replace))
+                            }
                         }
                         OutlinedButton(onClick = onDelete, enabled = !busy) {
                             Text(stringResource(R.string.action_delete))

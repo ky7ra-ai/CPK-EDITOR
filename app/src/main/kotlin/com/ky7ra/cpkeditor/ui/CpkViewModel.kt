@@ -68,6 +68,7 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
     private class ExtractRequest(val paths: Set<String>?)
 
     private var extractRequest: ExtractRequest? = null
+    private var replacePath: String? = null
 
     // ---- small helpers ---------------------------------------------------------------------
 
@@ -248,6 +249,23 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
             val result = CpkEditing.addOrReplace(_state.value.entries, incoming)
             _state.update { it.copy(entries = result.entries, dirty = true, selected = emptySet()) }
             notify(str(R.string.msg_added, result.added, result.replaced))
+        }
+    }
+
+    /** Remembers which entry is being replaced while the system file picker is open. */
+    fun prepareReplace(path: String) {
+        replacePath = path
+    }
+
+    /** Puts the picked file's content into the entry chosen with [prepareReplace], keeping its path. */
+    fun replaceEntry(uri: Uri) {
+        val path = replacePath ?: return
+        replacePath = null
+        launchTask(R.string.progress_adding) {
+            storage.keepReadAccess(uri)
+            val result = CpkEditing.addOrReplace(_state.value.entries, listOf(storage.newFile(uri, path)))
+            _state.update { it.copy(entries = result.entries, dirty = true, selected = emptySet()) }
+            notify(str(R.string.msg_replaced, path.substringAfterLast('/')))
         }
     }
 

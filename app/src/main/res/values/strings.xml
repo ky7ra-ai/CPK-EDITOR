@@ -15,6 +15,7 @@
     <string name="action_close">Tutup</string>
     <string name="action_cancel">Batal</string>
     <string name="action_ok">OK</string>
+    <string name="action_replace">Ganti</string>
     <string name="action_add">Tambah</string>
     <string name="action_discard">Buang perubahan</string>
     <string name="action_select_all">Pilih semua</string>
@@ -50,6 +51,7 @@
 
     <string name="msg_opened">%1$s dibuka (%2$d file)</string>
     <string name="msg_added">%1$d ditambahkan, %2$d diganti</string>
+    <string name="msg_replaced">%1$s diganti</string>
     <string name="msg_nothing_added">Tidak ada file yang ditambahkan</string>
     <string name="msg_removed">%1$d file dihapus (simpan untuk menerapkan)</string>
     <string name="msg_extracted">%1$d file diekstrak</string>
