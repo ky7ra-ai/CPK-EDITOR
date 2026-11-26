@@ -29,11 +29,38 @@ class CpkInfo(
     val fileSize: Long,
 )
 
+/** A parsed table together with its (de-obfuscated) bytes, kept so the archive can be patched in place. */
+internal class TableData(
+    val table: UtfTable,
+    val buf: ByteArray,
+    val encrypted: Boolean,
+    /** Position of the chunk (the "CPK "/"TOC " magic) in the file; the table starts 0x10 later. */
+    val position: Long,
+)
+
 class CpkArchive private constructor(
     private val source: RandomAccessSource,
     val entries: List<CpkEntry>,
     val info: CpkInfo,
+    internal val headerData: TableData,
+    internal val tocData: TableData,
+    /** Absolute position that TOC "FileOffset" values are relative to. */
+    internal val dataBase: Long,
 ) : Closeable {
+
+    internal val sourceLength: Long get() = source.length
+
+    /** Copies the original bytes [start, end) to [out]. */
+    internal fun copyRaw(start: Long, end: Long, out: OutputStream, buffer: ByteArray, isCancelled: () -> Boolean) {
+        var pos = start
+        while (pos < end) {
+            if (isCancelled()) throw java.util.concurrent.CancellationException("CPK write cancelled")
+            val n = source.read(pos, buffer, 0, minOf(buffer.size.toLong(), end - pos).toInt())
+            if (n <= 0) throw EOFException("Unexpected end of file at $pos")
+            out.write(buffer, 0, n)
+            pos += n
+        }
+    }
 
     /** Stored (possibly compressed) bytes of [entry], streamed straight from the archive. */
     fun openStored(entry: CpkEntry): InputStream = RangeInputStream(source, entry.offset, entry.storedSize)
@@ -74,7 +101,8 @@ class CpkArchive private constructor(
 
         private fun parse(source: RandomAccessSource): CpkArchive {
             if (source.length < 0x20) throw CpkFormatException("File is too small to be a CPK")
-            val header = readTable(source, 0, "CPK ")
+            val headerData = readTable(source, 0, "CPK ")
+            val header = headerData.table
             if (header.rowCount < 1) throw CpkFormatException("CPK header table is empty")
 
             val tocOffset = header.long(0, "TocOffset")
@@ -88,7 +116,8 @@ class CpkArchive private constructor(
                     },
                 )
             }
-            val toc = readTable(source, tocOffset, "TOC ")
+            val tocData = readTable(source, tocOffset, "TOC ")
+            val toc = tocData.table
 
             // File offsets in the TOC are relative to whichever of TocOffset / ContentOffset comes first.
             var base = tocOffset
@@ -120,14 +149,14 @@ class CpkArchive private constructor(
                 sorted = header.long(0, "Sorted") != 0L,
                 fileSize = source.length,
             )
-            return CpkArchive(source, entries, info)
+            return CpkArchive(source, entries, info, headerData, tocData, base)
         }
 
         private fun cleanName(s: String?): String =
             if (s == null || s == "<NULL>") "" else s.replace('\\', '/').trim('/')
 
         /** Reads a chunk (4-char magic, u32 flags, u64 size, then an @UTF table) at [position]. */
-        private fun readTable(source: RandomAccessSource, position: Long, magic: String): UtfTable {
+        private fun readTable(source: RandomAccessSource, position: Long, magic: String): TableData {
             if (position < 0 || position + 0x10 > source.length) {
                 throw CpkFormatException("'$magic' table lies outside the file")
             }
@@ -140,8 +169,9 @@ class CpkArchive private constructor(
                 throw CpkFormatException("'$magic' table has an invalid size")
             }
             val buf = source.readFully(position + 0x10, size.toInt())
-            if (!UtfCrypto.isPlain(buf, 0)) UtfCrypto.xorInPlace(buf, 0, buf.size)
-            return UtfTable(buf, 0)
+            val encrypted = !UtfCrypto.isPlain(buf, 0)
+            if (encrypted) UtfCrypto.xorInPlace(buf, 0, buf.size)
+            return TableData(UtfTable(buf, 0), buf, encrypted, position)
         }
     }
 }

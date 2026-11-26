@@ -121,6 +121,15 @@ internal class UtfTable(private val buf: ByteArray, base: Int) {
 
     fun has(name: String): Boolean = columns.containsKey(name)
 
+    /** Where a per-row value lives inside the table bytes; null for constant/absent columns. */
+    class Slot(val pos: Int, val size: Int)
+
+    fun rowSlot(row: Int, name: String): Slot? {
+        val c = columns[name] ?: return null
+        if (c.rowOffset < 0 || row < 0 || row >= rowCount) return null
+        return Slot(rowsBase + row * rowWidth + c.rowOffset, UtfType.size(c.type))
+    }
+
     private fun valuePos(c: Column, row: Int): Int = when {
         c.constPos >= 0 -> c.constPos
         c.rowOffset >= 0 -> rowsBase + row * rowWidth + c.rowOffset

@@ -56,6 +56,7 @@
     <string name="msg_removed">%1$d file dihapus (simpan untuk menerapkan)</string>
     <string name="msg_extracted">%1$d file diekstrak</string>
     <string name="msg_saved">Tersimpan: %1$s</string>
+    <string name="msg_saved_patch">Tersimpan dengan struktur CPK asli dipertahankan: %1$s</string>
     <string name="msg_cancelled">Dibatalkan</string>
     <string name="err_not_cpk">Bukan file CPK yang didukung: %1$s</string>
     <string name="err_generic">Terjadi kesalahan: %1$s</string>

@@ -11,6 +11,7 @@ import com.ky7ra.cpkeditor.cpk.CpkArchive
 import com.ky7ra.cpkeditor.cpk.CpkEditing
 import com.ky7ra.cpkeditor.cpk.CpkFormatException
 import com.ky7ra.cpkeditor.cpk.CpkPaths
+import com.ky7ra.cpkeditor.cpk.CpkPatcher
 import com.ky7ra.cpkeditor.cpk.CpkWriter
 import com.ky7ra.cpkeditor.cpk.EntryState
 import com.ky7ra.cpkeditor.cpk.NewFile
@@ -373,25 +374,38 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         val entries = s.entries
+        // When files were only replaced, patch the original CPK so its structure stays untouched.
+        val source = archive
+        val plan = if (source != null) CpkPatcher.plan(source, entries) else null
         // The "Sorted" flag is only trustworthy while the original order is untouched.
-        val sorted = archive?.info?.sorted == true && entries.none { it.state == EntryState.ADDED }
+        val sorted = source?.info?.sorted == true && entries.none { it.state == EntryState.ADDED }
         launchTask(R.string.progress_saving) {
             try {
                 storage.openOutput(uri).buffered(1 shl 20).use { out ->
-                    CpkWriter.write(
-                        entries,
-                        out,
-                        sorted,
-                        progress = { done, total -> reportProgress(done, total) },
-                        isCancelled = { !isActive },
-                    )
+                    if (plan != null) {
+                        CpkPatcher.write(
+                            plan,
+                            out,
+                            progress = { done, total -> reportProgress(done, total) },
+                            isCancelled = { !isActive },
+                        )
+                    } else {
+                        CpkWriter.write(
+                            entries,
+                            out,
+                            sorted,
+                            progress = { done, total -> reportProgress(done, total) },
+                            isCancelled = { !isActive },
+                        )
+                    }
                 }
             } catch (t: Throwable) {
                 storage.delete(uri)
                 throw t
             }
             _state.update { it.copy(dirty = false) }
-            notify(str(R.string.msg_saved, storage.info(uri).name))
+            val name = storage.info(uri).name
+            notify(str(if (plan != null) R.string.msg_saved_patch else R.string.msg_saved, name))
         }
     }
 }

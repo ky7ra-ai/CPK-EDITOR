@@ -45,7 +45,12 @@ gradle :app:testDebugUnitTest
 
 ## Cara kerja penyimpanan
 
-CPK ditulis ulang utuh ke file baru: area header 0x800 byte, tabel `TOC` di 0x800, lalu setiap file diratakan ke
+**Mode patch (otomatis bila kamu hanya mengganti file).** CPK asli disalin byte demi byte: header, tabel ETOC/ITOC, urutan
+dan perataan file tidak berubah. Yang berubah hanya baris TOC file yang diganti. Data baru menimpa slot lama bila muat
+(ukuran file CPK tidak berubah), kalau tidak ditaruh di akhir file. Data yang dipakai bersama beberapa entri tidak pernah
+ditimpa. Ini yang paling aman untuk game yang rewel terhadap struktur CPK.
+
+**Mode tulis ulang (bila ada file ditambah/dihapus).** CPK ditulis ulang utuh ke file baru: area header 0x800 byte, tabel `TOC` di 0x800, lalu setiap file diratakan ke
 kelipatan 0x800. Byte file lama disalin apa adanya (file terkompresi tetap terkompresi); file yang ditambahkan disimpan
 tanpa kompresi. Nama file di dalam CPK tidak peka huruf besar/kecil saat menimpa.
 

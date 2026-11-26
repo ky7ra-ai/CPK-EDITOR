@@ -55,6 +55,7 @@
     <string name="msg_removed">%1$d files removed (save to apply)</string>
     <string name="msg_extracted">%1$d files extracted</string>
     <string name="msg_saved">Saved: %1$s</string>
+    <string name="msg_saved_patch">Saved, original CPK structure preserved: %1$s</string>
     <string name="msg_cancelled">Cancelled</string>
     <string name="err_not_cpk">Not a supported CPK file: %1$s</string>
     <string name="err_generic">Something went wrong: %1$s</string>
