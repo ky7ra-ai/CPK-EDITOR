@@ -16,7 +16,9 @@ yang biasa dipakai modder game (mis. Naruto Storm 4).
 - Hapus file dari CPK.
 - Buat CPK baru dari nol.
 - Simpan sebagai CPK baru. File asli tidak pernah diubah; data file ditulis secara streaming (aman untuk file besar).
-- UI Indonesia + Inggris, tema terang/gelap, tanpa izin storage (memakai Storage Access Framework).
+- UI modern bernuansa shinobi (oren, putih, hitam) dengan layar sambutan "Siapa kamu?", navbar melayang 3 tab
+  (Beranda, Pengaturan, Tentang), dan tema Gelap / Terang / Bawaan sistem.
+- Indonesia + Inggris, tanpa izin storage (memakai Storage Access Framework).
 
 ## Membangun APK
 
@@ -34,13 +36,21 @@ Menjalankan tes parser/writer CPK (JVM murni, tanpa emulator):
 gradle :app:testDebugUnitTest
 ```
 
+## Gambar di layar sambutan
+
+Layar "Siapa kamu?" menampilkan gambar yang kamu simpan sebagai `welcome_character` di folder
+`app/src/main/res/drawable-nodpi/` (format `.png`, `.webp`, atau `.jpg`; gambar transparan paling bagus).
+Contoh: `app/src/main/res/drawable-nodpi/welcome_character.png`. Tanpa file itu, layar menampilkan lambang shuriken.
+Setelah menambahkannya, build ulang (push, atau jalankan workflow *Build APK*). Perhatikan bahwa repo ini publik,
+jadi gambar yang kamu unggah ikut terlihat publik.
+
 ## Struktur
 
 | Path | Isi |
 |---|---|
 | `app/src/main/kotlin/.../cpk/` | Inti CPK tanpa dependensi Android: `CpkArchive` (baca), `CpkWriter` (tulis), `Utf` (tabel @UTF), `Layla` (dekompresi), `Editing` (tambah/ganti/hapus) |
 | `app/src/main/kotlin/.../data/SafStorage.kt` | Akses file Android lewat SAF |
-| `app/src/main/kotlin/.../ui/` | `CpkViewModel` + UI Jetpack Compose |
+| `app/src/main/kotlin/.../ui/` | `CpkViewModel`, tema, layar (sambutan, beranda/proyek, pengaturan, tentang) dan komponen Jetpack Compose |
 | `app/src/test/` | Tes JUnit untuk inti CPK |
 
 ## Cara kerja penyimpanan
