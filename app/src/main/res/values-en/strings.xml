@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CPK Editor</string>
+
+    <string name="action_open">Open CPK</string>
+    <string name="action_new">New CPK</string>
+    <string name="action_add_files">Add files</string>
+    <string name="action_add_folder">Add folder</string>
+    <string name="action_extract">Extract</string>
+    <string name="action_extract_all">Extract all</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_save_as">Save as…</string>
+    <string name="action_save">Save</string>
+    <string name="action_close">Close</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_add">Add</string>
+    <string name="action_discard">Discard changes</string>
+    <string name="action_select_all">Select all</string>
+    <string name="action_clear_selection">Clear selection</string>
+
+    <string name="hint_search">Search files</string>
+    <string name="empty_title">Open or create a CPK archive</string>
+    <string name="empty_body">Browse a CPK, extract files, add or replace files with your own, then save a new CPK — all on your phone.</string>
+    <string name="no_results">No matching files</string>
+    <string name="empty_archive">This CPK is empty. Add some files or a folder.</string>
+
+    <string name="summary_files">%1$d files · %2$s</string>
+    <string name="summary_changes">%1$d new · %2$d replaced</string>
+    <string name="selected_count">%1$d selected</string>
+    <string name="badge_new">NEW</string>
+    <string name="badge_replaced">REPLACED</string>
+    <string name="badge_compressed">Compressed</string>
+
+    <string name="dialog_add_title">Add to CPK</string>
+    <string name="dialog_add_body">%1$s selected. Enter the destination folder inside the CPK (leave empty for the root), for example data/spc. Files with the same path are replaced.</string>
+    <string name="pending_files">%1$d files</string>
+    <string name="pending_folder">1 folder</string>
+    <string name="dialog_add_dir_label">Folder inside the CPK</string>
+    <string name="dialog_delete_title">Delete %1$d files?</string>
+    <string name="dialog_delete_body">Files only disappear from the new CPK when you save. The original CPK file is not changed.</string>
+    <string name="dialog_discard_title">Discard changes?</string>
+    <string name="dialog_discard_body">You have unsaved changes. Closing will lose them.</string>
+
+    <string name="progress_opening">Opening CPK…</string>
+    <string name="progress_adding">Reading files…</string>
+    <string name="progress_extracting">Extracting…</string>
+    <string name="progress_saving">Saving CPK…</string>
+
+    <string name="msg_opened">Opened %1$s (%2$d files)</string>
+    <string name="msg_added">%1$d added, %2$d replaced</string>
+    <string name="msg_nothing_added">No files were added</string>
+    <string name="msg_removed">%1$d files removed (save to apply)</string>
+    <string name="msg_extracted">%1$d files extracted</string>
+    <string name="msg_saved">Saved: %1$s</string>
+    <string name="msg_cancelled">Cancelled</string>
+    <string name="err_not_cpk">Not a supported CPK file: %1$s</string>
+    <string name="err_generic">Something went wrong: %1$s</string>
+    <string name="err_same_file">Choose a different file name. Overwriting the CPK that is currently open would destroy it.</string>
+    <string name="err_invalid_path">Invalid destination folder.</string>
+
+    <string name="default_cpk_name">new.cpk</string>
+    <string name="untitled">Untitled</string>
+</resources>

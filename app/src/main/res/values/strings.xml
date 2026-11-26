@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Default language: Indonesian. English lives in values-en. -->
+<resources>
+    <string name="app_name">CPK Editor</string>
+
+    <string name="action_open">Buka CPK</string>
+    <string name="action_new">CPK baru</string>
+    <string name="action_add_files">Tambah file</string>
+    <string name="action_add_folder">Tambah folder</string>
+    <string name="action_extract">Ekstrak</string>
+    <string name="action_extract_all">Ekstrak semua</string>
+    <string name="action_delete">Hapus</string>
+    <string name="action_save_as">Simpan sebagai…</string>
+    <string name="action_save">Simpan</string>
+    <string name="action_close">Tutup</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_ok">OK</string>
+    <string name="action_add">Tambah</string>
+    <string name="action_discard">Buang perubahan</string>
+    <string name="action_select_all">Pilih semua</string>
+    <string name="action_clear_selection">Batal pilih</string>
+
+    <string name="hint_search">Cari file</string>
+    <string name="empty_title">Buka atau buat arsip CPK</string>
+    <string name="empty_body">Jelajahi isi CPK, ekstrak file, tambahkan atau ganti file dengan file milikmu, lalu simpan sebagai CPK baru — semuanya langsung di ponsel.</string>
+    <string name="no_results">Tidak ada file yang cocok</string>
+    <string name="empty_archive">CPK ini masih kosong. Tambahkan file atau folder.</string>
+
+    <string name="summary_files">%1$d file · %2$s</string>
+    <string name="summary_changes">%1$d baru · %2$d diganti</string>
+    <string name="selected_count">%1$d dipilih</string>
+    <string name="badge_new">BARU</string>
+    <string name="badge_replaced">DIGANTI</string>
+    <string name="badge_compressed">Terkompresi</string>
+
+    <string name="dialog_add_title">Tambah ke CPK</string>
+    <string name="dialog_add_body">%1$s dipilih. Isi folder tujuan di dalam CPK (kosongkan untuk root), misalnya data/spc. File dengan path yang sama akan diganti.</string>
+    <string name="pending_files">%1$d file</string>
+    <string name="pending_folder">1 folder</string>
+    <string name="dialog_add_dir_label">Folder di dalam CPK</string>
+    <string name="dialog_delete_title">Hapus %1$d file?</string>
+    <string name="dialog_delete_body">File hanya hilang dari CPK baru saat kamu menyimpan. File CPK asli tidak diubah.</string>
+    <string name="dialog_discard_title">Buang perubahan?</string>
+    <string name="dialog_discard_body">Ada perubahan yang belum disimpan. Jika ditutup, perubahan itu hilang.</string>
+
+    <string name="progress_opening">Membuka CPK…</string>
+    <string name="progress_adding">Membaca file…</string>
+    <string name="progress_extracting">Mengekstrak…</string>
+    <string name="progress_saving">Menyimpan CPK…</string>
+
+    <string name="msg_opened">%1$s dibuka (%2$d file)</string>
+    <string name="msg_added">%1$d ditambahkan, %2$d diganti</string>
+    <string name="msg_nothing_added">Tidak ada file yang ditambahkan</string>
+    <string name="msg_removed">%1$d file dihapus (simpan untuk menerapkan)</string>
+    <string name="msg_extracted">%1$d file diekstrak</string>
+    <string name="msg_saved">Tersimpan: %1$s</string>
+    <string name="msg_cancelled">Dibatalkan</string>
+    <string name="err_not_cpk">Bukan file CPK yang didukung: %1$s</string>
+    <string name="err_generic">Terjadi kesalahan: %1$s</string>
+    <string name="err_same_file">Pilih nama file yang berbeda. Menimpa CPK yang sedang dibuka akan merusaknya.</string>
+    <string name="err_invalid_path">Folder tujuan tidak valid.</string>
+
+    <string name="default_cpk_name">baru.cpk</string>
+    <string name="untitled">Tanpa judul</string>
+</resources>
