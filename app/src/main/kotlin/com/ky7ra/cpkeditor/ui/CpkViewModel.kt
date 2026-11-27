@@ -7,8 +7,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ky7ra.cpkeditor.R
 import com.ky7ra.cpkeditor.cpk.ChannelSource
+import com.ky7ra.cpkeditor.cpk.CpkBrowse
 import com.ky7ra.cpkeditor.cpk.CpkArchive
 import com.ky7ra.cpkeditor.cpk.CpkEditing
+import com.ky7ra.cpkeditor.cpk.CpkInfo
 import com.ky7ra.cpkeditor.cpk.CpkFormatException
 import com.ky7ra.cpkeditor.cpk.CpkPaths
 import com.ky7ra.cpkeditor.cpk.CpkPatcher
@@ -36,7 +38,17 @@ sealed interface PendingAdd {
     class Folder(val uri: Uri) : PendingAdd
 }
 
-data class Progress(val label: String, val fraction: Float? = null)
+/** State of the running task, shown in the progress card. */
+data class Progress(
+    val label: String,
+    val fraction: Float? = null,
+    /** File being processed right now, when known. */
+    val detail: String? = null,
+    val done: Long = 0L,
+    val total: Long = 0L,
+    /** Estimated seconds left; null until there is enough data for a sensible guess. */
+    val etaSeconds: Long? = null,
+)
 
 data class Notice(val id: Long, val text: String)
 
@@ -46,10 +58,14 @@ data class UiState(
     val entries: List<WorkingEntry> = emptyList(),
     val dirty: Boolean = false,
     val query: String = "",
+    /** Folder currently shown in the editor ('/' separated, \"\" is the root). */
+    val dir: String = "",
     val selected: Set<String> = emptySet(),
     val progress: Progress? = null,
     val pendingAdd: PendingAdd? = null,
     val notice: Notice? = null,
+    /** Header facts of the opened archive; null for a new, empty one. */
+    val cpkInfo: CpkInfo? = null,
 )
 
 class CpkViewModel(application: Application) : AndroidViewModel(application) {
@@ -65,6 +81,7 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
     private var job: Job? = null
     private var noticeCounter = 0L
     private var lastProgressAt = 0L
+    private var taskStartNanos = 0L
 
     private class ExtractRequest(val paths: Set<String>?)
 
@@ -89,11 +106,25 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
         if (now - lastProgressAt < 80_000_000L && done < total) return
         lastProgressAt = now
         val fraction = if (total > 0) (done.toFloat() / total).coerceIn(0f, 1f) else null
-        _state.update { s -> s.progress?.let { s.copy(progress = it.copy(fraction = fraction)) } ?: s }
+        val elapsed = (now - taskStartNanos) / 1_000_000_000.0
+        val eta = if (fraction != null && fraction > 0.01f && done > 0 && elapsed >= 1.5) {
+            ((total - done) * elapsed / done).toLong().coerceAtLeast(0L)
+        } else {
+            null
+        }
+        _state.update { s ->
+            s.progress?.let { s.copy(progress = it.copy(fraction = fraction, done = done, total = total, etaSeconds = eta)) } ?: s
+        }
+    }
+
+    /** Tells the progress card which file is being worked on. */
+    private fun reportEntry(path: String) {
+        _state.update { s -> s.progress?.let { s.copy(progress = it.copy(detail = path)) } ?: s }
     }
 
     private fun launchTask(@StringRes label: Int, block: suspend CoroutineScope.() -> Unit) {
         if (_state.value.progress != null) return
+        taskStartNanos = System.nanoTime()
         _state.update { it.copy(progress = Progress(str(label))) }
         job = viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -129,7 +160,7 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
             oldArchive?.close()
             oldCache?.delete()
             val entries = CpkEditing.fromArchive(opened)
-            _state.update { UiState(hasProject = true, title = name, entries = entries, progress = it.progress) }
+            _state.update { UiState(hasProject = true, title = name, entries = entries, cpkInfo = opened.info, progress = it.progress) }
             notify(str(R.string.msg_opened, name, entries.size))
         }
     }
@@ -201,6 +232,18 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectAll(paths: Collection<String>) {
         _state.update { it.copy(selected = paths.toSet()) }
+    }
+
+    fun setSelection(paths: Set<String>) {
+        _state.update { it.copy(selected = paths) }
+    }
+
+    fun enterDir(dir: String) {
+        _state.update { it.copy(dir = dir, query = "") }
+    }
+
+    fun goUp() {
+        _state.update { it.copy(dir = it.dir.substringBeforeLast('/', "")) }
     }
 
     fun clearSelection() {
@@ -275,7 +318,14 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
         if (s.selected.isEmpty() || s.progress != null) return
         val remaining = CpkEditing.remove(s.entries, s.selected)
         val removed = s.entries.size - remaining.size
-        _state.update { it.copy(entries = remaining, selected = emptySet(), dirty = true) }
+        _state.update {
+            it.copy(
+                entries = remaining,
+                selected = emptySet(),
+                dirty = true,
+                dir = CpkBrowse.existingDir(remaining, it.dir),
+            )
+        }
         notify(str(R.string.msg_removed, removed))
     }
 
@@ -330,6 +380,7 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
             var done = 0L
             for (target in targets) {
                 if (!isActive) throw CancellationException()
+                reportEntry(target.path)
                 writer.open(target.path).use { raw ->
                     val counting = CountingOutputStream(raw) { n ->
                         done += n
@@ -346,6 +397,7 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
     fun extractSingle(uri: Uri) {
         val target = extractTargets().firstOrNull() ?: return
         launchTask(R.string.progress_extracting) {
+            reportEntry(target.path)
             try {
                 storage.openOutput(uri).use { raw ->
                     var done = 0L
@@ -388,6 +440,7 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
                             out,
                             progress = { done, total -> reportProgress(done, total) },
                             isCancelled = { !isActive },
+                            onEntry = ::reportEntry,
                         )
                     } else {
                         CpkWriter.write(
@@ -396,6 +449,7 @@ class CpkViewModel(application: Application) : AndroidViewModel(application) {
                             sorted,
                             progress = { done, total -> reportProgress(done, total) },
                             isCancelled = { !isActive },
+                            onEntry = ::reportEntry,
                         )
                     }
                 }

@@ -109,4 +109,17 @@
     <string name="about_desc">Editor arsip CPK untuk Android: buka, ekstrak, ganti, dan tambah file, lalu simpan sebagai CPK baru.</string>
     <string name="about_disclaimer">Aplikasi tidak resmi dan tidak berafiliasi dengan CRI Middleware, Bandai Namco, maupun pemilik waralaba Naruto. Selalu bekerja dengan salinan file kamu.</string>
     <string name="about_github">Buka di GitHub</string>
+    <string name="action_back">Kembali</string>
+    <string name="action_search">Cari</string>
+    <string name="menu_more">Menu lainnya</string>
+    <string name="editor_title">Editor CPK</string>
+    <string name="file_card_sub">%1$s • %2$d file</string>
+    <string name="item_count">%1$d item</string>
+    <string name="crumb_root">Root</string>
+    <string name="empty_folder">Folder ini kosong</string>
+    <string name="info_archive_size">Ukuran arsip asli</string>
+    <string name="info_align">Perataan</string>
+    <string name="progress_eta">Perkiraan: %1$s</string>
+    <string name="eta_sec">%1$d dtk</string>
+    <string name="eta_min">%1$d mnt %2$d dtk</string>
 </resources>

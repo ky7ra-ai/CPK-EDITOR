@@ -7,6 +7,8 @@ import java.util.concurrent.CancellationException
 internal class PatchRegion(
     val start: Long,
     val length: Long,
+    /** Path of the file whose data this region holds, for progress reporting; null for table regions. */
+    val label: String?,
     val write: (OutputStream, ByteArray, () -> Boolean) -> Unit,
 )
 
@@ -63,7 +65,7 @@ object CpkPatcher {
             if (fitsOldSlot) {
                 newOffset = o.offset
                 regions.add(
-                    PatchRegion(o.offset, o.storedSize) { out, buffer, isCancelled ->
+                    PatchRegion(o.offset, o.storedSize, e.path) { out, buffer, isCancelled ->
                         streamEntry(e, out, buffer, isCancelled)
                         writeZeros(out, o.storedSize - e.storedSize)
                     },
@@ -85,7 +87,7 @@ object CpkPatcher {
 
         if (changed.isNotEmpty()) {
             val bytes = if (toc.encrypted) obfuscated(tocBuf) else tocBuf
-            regions.add(PatchRegion(toc.position + 0x10, bytes.size.toLong()) { out, _, _ -> out.write(bytes) })
+            regions.add(PatchRegion(toc.position + 0x10, bytes.size.toLong(), null) { out, _, _ -> out.write(bytes) })
         }
         if (appended.isNotEmpty()) {
             val header = archive.headerData
@@ -94,7 +96,7 @@ object CpkPatcher {
                 val buf = header.buf.copyOf()
                 if (put(buf, slot, newLength)) {
                     val bytes = if (header.encrypted) obfuscated(buf) else buf
-                    regions.add(PatchRegion(header.position + 0x10, bytes.size.toLong()) { out, _, _ -> out.write(bytes) })
+                    regions.add(PatchRegion(header.position + 0x10, bytes.size.toLong(), null) { out, _, _ -> out.write(bytes) })
                 }
             }
         }
@@ -113,6 +115,7 @@ object CpkPatcher {
         out: OutputStream,
         progress: ((Long, Long) -> Unit)? = null,
         isCancelled: () -> Boolean = { false },
+        onEntry: ((String) -> Unit)? = null,
     ) {
         val archive = plan.archive
         val srcLen = archive.sourceLength
@@ -140,6 +143,7 @@ object CpkPatcher {
         var pos = 0L
         for (r in plan.regions) {
             archive.copyRaw(pos, r.start, sink, buffer, isCancelled)
+            r.label?.let { onEntry?.invoke(it) }
             r.write(sink, buffer, isCancelled)
             pos = r.start + r.length
         }
@@ -149,6 +153,7 @@ object CpkPatcher {
             val align = archive.info.align.toLong().coerceAtLeast(1)
             writeZeros(sink, alignUp(srcLen, align) - srcLen)
             for (e in plan.appended) {
+                onEntry?.invoke(e.path)
                 streamEntry(e, sink, buffer, isCancelled)
                 writeZeros(sink, alignUp(e.storedSize, align) - e.storedSize)
             }

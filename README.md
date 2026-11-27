@@ -14,6 +14,7 @@ yang biasa dipakai modder game (mis. Naruto Storm 4).
 - Ekstrak satu file, beberapa file, atau semuanya (struktur folder dipertahankan). File terkompresi CRILAYLA otomatis didekompresi.
 - Tambah file atau seluruh folder ke dalam CPK, pilih folder tujuan di dalam CPK. Path yang sudah ada akan **diganti**.
 - Hapus file dari CPK.
+- Halaman **Editor CPK**: jelajah per folder (ketuk folder untuk masuk, tekan lama untuk memilih seluruh isinya), kartu info arsip, tombol Ganti / Ekstrak / Hapus, serta kartu progres dengan persentase, file yang sedang diproses, ukuran dan perkiraan waktu.
 - Buat CPK baru dari nol.
 - Simpan sebagai CPK baru. File asli tidak pernah diubah; data file ditulis secara streaming (aman untuk file besar).
 - UI modern bernuansa shinobi (oren, putih, hitam) dengan layar sambutan "Siapa kamu?", navbar melayang 3 tab

@@ -108,4 +108,17 @@
     <string name="about_desc">CPK archive editor for Android: open, extract, replace and add files, then save as a new CPK.</string>
     <string name="about_disclaimer">Unofficial app, not affiliated with CRI Middleware, Bandai Namco or the owners of the Naruto franchise. Always work on a copy of your files.</string>
     <string name="about_github">Open on GitHub</string>
+    <string name="action_back">Back</string>
+    <string name="action_search">Search</string>
+    <string name="menu_more">More options</string>
+    <string name="editor_title">CPK Editor</string>
+    <string name="file_card_sub">%1$s • %2$d files</string>
+    <string name="item_count">%1$d items</string>
+    <string name="crumb_root">Root</string>
+    <string name="empty_folder">This folder is empty</string>
+    <string name="info_archive_size">Original archive size</string>
+    <string name="info_align">Alignment</string>
+    <string name="progress_eta">Estimated: %1$s</string>
+    <string name="eta_sec">%1$d sec</string>
+    <string name="eta_min">%1$d min %2$d sec</string>
 </resources>

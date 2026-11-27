@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -53,8 +52,11 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     var confirmClose by rememberSaveable { mutableStateOf(false) }
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
+    var searching by rememberSaveable(state.hasProject, state.title) { mutableStateOf(false) }
     val tab = AppTab.entries[tabIndex]
     val busy = state.progress != null
+    // The editor page is full screen: no floating nav bar, its own back arrow.
+    val editorVisible = tab == AppTab.Home && state.hasProject
 
     LaunchedEffect(state.notice?.id) {
         val notice = state.notice
@@ -105,18 +107,29 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
             vm.closeProject()
         }
     }
+    val setSearching: (Boolean) -> Unit = { on ->
+        searching = on
+        if (!on) vm.setQuery("")
+    }
 
-    BackHandler(enabled = tab != AppTab.Home || (state.hasProject && !busy)) {
+    // One place decides what "back" means, for both the system gesture and the top-bar arrow.
+    val goBack: () -> Unit = {
         when {
+            busy -> Unit
             tab != AppTab.Home -> tabIndex = 0
+            searching -> setSearching(false)
             state.selected.isNotEmpty() -> vm.clearSelection()
+            state.dir.isNotEmpty() -> vm.goUp()
             else -> closeOrConfirm()
         }
     }
+    BackHandler(enabled = busy || tab != AppTab.Home || state.hasProject) { goBack() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = NavBarSpace)) },
+        snackbarHost = {
+            SnackbarHost(snackbar, Modifier.padding(bottom = if (editorVisible) 150.dp else NavBarSpace))
+        },
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (tab) {
@@ -128,28 +141,42 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
                         bottomInset = NavBarSpace,
                     )
                 } else {
-                    ProjectScreen(
+                    EditorScreen(
                         state = state,
                         vm = vm,
-                        bottomInset = NavBarSpace,
-                        onClose = closeOrConfirm,
+                        searching = searching,
+                        onSearchingChange = setSearching,
+                        onBack = goBack,
                         onSaveAs = { saveAs.launch(vm.suggestedSaveName()) },
                         onAddFiles = { pickFiles.launch(arrayOf("*/*")) },
                         onAddFolder = { pickFolder.launch(null) },
                         onExtract = onExtract,
                         onReplace = onReplace,
                         onDelete = { confirmDelete = true },
+                        onCloseProject = closeOrConfirm,
                     )
                 }
                 AppTab.Settings -> SettingsScreen(settings, NavBarSpace)
                 AppTab.About -> AboutScreen(NavBarSpace)
             }
 
-            FloatingNavBar(
-                selected = tab,
-                onSelect = { tabIndex = it.ordinal },
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
-            )
+            if (!editorVisible) {
+                state.progress?.let { progress ->
+                    ProgressCard(
+                        progress = progress,
+                        onCancel = vm::cancel,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 20.dp)
+                            .padding(bottom = NavBarSpace),
+                    )
+                }
+                FloatingNavBar(
+                    selected = tab,
+                    onSelect = { tabIndex = it.ordinal },
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp),
+                )
+            }
         }
     }
 
@@ -187,24 +214,6 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
             },
             dismissButton = {
                 TextButton(onClick = { confirmClose = false }) { Text(stringResource(R.string.action_cancel)) }
-            },
-        )
-    }
-
-    state.progress?.let { progress ->
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text(progress.label) },
-            text = {
-                val fraction = progress.fraction
-                if (fraction == null) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                } else {
-                    LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = vm::cancel) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }

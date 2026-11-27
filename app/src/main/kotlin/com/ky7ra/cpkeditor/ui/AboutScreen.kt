@@ -17,9 +17,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -79,20 +83,27 @@ fun AboutScreen(bottomInset: Dp) {
             contentColor = ex.onTile,
             border = BorderStroke(1.dp, ex.cardBorder),
         ) {
-            Box(Modifier.fillMaxWidth()) {
+            Box(Modifier.fillMaxWidth().height(200.dp)) {
                 Text(
                     "忍",
-                    fontSize = 190.sp,
+                    fontSize = 210.sp,
+                    lineHeight = 210.sp,
                     fontWeight = FontWeight.Black,
                     color = Brand.Orange,
-                    modifier = Modifier.align(Alignment.TopEnd).offset(x = 24.dp, y = (-20).dp),
+                    modifier = Modifier.align(Alignment.CenterEnd).offset(x = 26.dp),
                 )
-                Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    ShurikenMark(Modifier.size(48.dp), color = Brand.Orange, hole = ex.tile)
-                    Spacer(Modifier.height(44.dp))
+                ShurikenMark(
+                    Modifier.align(Alignment.TopStart).padding(22.dp).size(40.dp),
+                    color = Brand.Orange,
+                    hole = ex.tile,
+                )
+                Column(
+                    Modifier.align(Alignment.BottomStart).padding(22.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
                     Text(
                         stringResource(R.string.app_name),
-                        fontSize = 30.sp,
+                        fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
@@ -108,6 +119,7 @@ fun AboutScreen(bottomInset: Dp) {
         InfoRow(stringResource(R.string.about_developer), stringResource(R.string.about_developer_value))
 
         Surface(
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
             color = cs.surface,
             border = BorderStroke(1.dp, ex.cardBorder),
@@ -115,27 +127,53 @@ fun AboutScreen(bottomInset: Dp) {
             Text(
                 stringResource(R.string.about_desc),
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.fillMaxWidth().padding(18.dp),
+                modifier = Modifier.padding(18.dp),
             )
         }
 
         Surface(
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
             color = cs.surfaceVariant,
         ) {
-            Text(
-                stringResource(R.string.about_disclaimer),
-                style = MaterialTheme.typography.bodySmall,
-                color = cs.onSurfaceVariant,
-                modifier = Modifier.fillMaxWidth().padding(18.dp),
-            )
+            Row(
+                Modifier.padding(18.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Icon(
+                    Icons.Filled.Info,
+                    contentDescription = null,
+                    tint = cs.onSurfaceVariant,
+                    modifier = Modifier.size(22.dp),
+                )
+                Text(
+                    stringResource(R.string.about_disclaimer),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = cs.onSurfaceVariant,
+                )
+            }
         }
 
-        PillButton(
-            text = stringResource(R.string.about_github),
+        Surface(
             onClick = { uriHandler.openUri(REPO_URL) },
-            style = PillStyle.Dark,
-        )
+            modifier = Modifier.fillMaxWidth(),
+            shape = CircleShape,
+            color = ex.tile,
+            contentColor = ex.onTile,
+            border = BorderStroke(1.dp, ex.cardBorder),
+        ) {
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 14.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(stringResource(R.string.about_github), style = MaterialTheme.typography.labelLarge)
+                Spacer(Modifier.size(8.dp))
+                Icon(ExternalIcon, contentDescription = null, modifier = Modifier.size(18.dp))
+            }
+        }
+        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -143,6 +181,7 @@ fun AboutScreen(bottomInset: Dp) {
 private fun InfoRow(label: String, value: String) {
     val cs = MaterialTheme.colorScheme
     Surface(
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         color = cs.surface,
         border = BorderStroke(1.dp, LocalExtras.current.cardBorder),

@@ -8,19 +8,21 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,9 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -83,19 +87,34 @@ fun SettingsScreen(settings: AppSettings, bottomInset: Dp) {
 
         SectionLabel(stringResource(R.string.settings_profile), Modifier.padding(top = 10.dp))
         var draft by remember(settings.userName) { mutableStateOf(settings.userName) }
-        OutlinedTextField(
+        Text(
+            stringResource(R.string.settings_name_label),
+            style = MaterialTheme.typography.labelLarge,
+            color = cs.onSurfaceVariant,
+        )
+        TextField(
             value = draft,
             onValueChange = { draft = it.take(24) },
             singleLine = true,
-            shape = CircleShape,
-            label = { Text(stringResource(R.string.settings_name_label)) },
+            shape = RoundedCornerShape(18.dp),
+            textStyle = MaterialTheme.typography.titleMedium,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = cs.surfaceVariant,
+                unfocusedContainerColor = cs.surfaceVariant,
+                disabledContainerColor = cs.surfaceVariant,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+            ),
             modifier = Modifier.fillMaxWidth(),
         )
         PillButton(
             text = stringResource(R.string.settings_name_save),
             onClick = { settings.updateName(draft.trim()) },
             enabled = draft.isNotBlank() && draft.trim() != settings.userName,
+            modifier = Modifier.fillMaxWidth(),
         )
+        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -107,11 +126,11 @@ private fun ThemeOption(mode: ThemeMode, title: String, desc: String, selected: 
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = cs.surface,
+        color = if (selected) lerp(cs.surface, cs.primary, 0.08f) else cs.surface,
         border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) cs.primary else ex.cardBorder),
     ) {
         Row(
-            Modifier.padding(16.dp),
+            Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -125,12 +144,12 @@ private fun ThemeOption(mode: ThemeMode, title: String, desc: String, selected: 
     }
 }
 
-/** Tiny preview of what a theme mode looks like. */
+/** Small rounded square previewing a theme mode, with the brand-orange dot in the middle. */
 @Composable
 private fun ThemeSwatch(mode: ThemeMode) {
-    val shape = RoundedCornerShape(14.dp)
+    val shape = RoundedCornerShape(16.dp)
     val outline = MaterialTheme.colorScheme.outline
-    Canvas(Modifier.size(44.dp).clip(shape).border(1.dp, outline, shape)) {
+    Canvas(Modifier.size(52.dp).clip(shape).border(1.dp, outline, shape)) {
         val light = Color(0xFFF4F4F5)
         when (mode) {
             ThemeMode.LIGHT -> drawRect(light)
@@ -140,6 +159,6 @@ private fun ThemeSwatch(mode: ThemeMode) {
                 drawRect(Brand.Ink, topLeft = Offset(size.width / 2f, 0f), size = Size(size.width / 2f, size.height))
             }
         }
-        drawCircle(Brand.Orange, radius = size.minDimension * 0.18f, center = Offset(size.width / 2f, size.height / 2f))
+        drawCircle(Brand.Orange, radius = size.minDimension * 0.17f, center = Offset(size.width / 2f, size.height / 2f))
     }
 }

@@ -27,6 +27,7 @@ object CpkWriter {
      * same order as the archive they came from and nothing was appended.
      * @param progress called with (bytesWritten, totalBytes) of file data.
      * @param isCancelled polled between chunks; a true result aborts with [CancellationException].
+     * @param onEntry called with the path of each file right before its data is written.
      */
     fun write(
         entries: List<WorkingEntry>,
@@ -34,6 +35,7 @@ object CpkWriter {
         sorted: Boolean = false,
         progress: ((Long, Long) -> Unit)? = null,
         isCancelled: () -> Boolean = { false },
+        onEntry: ((String) -> Unit)? = null,
     ) {
         val align = DEFAULT_ALIGN.toLong()
         val count = entries.size
@@ -84,6 +86,7 @@ object CpkWriter {
         val buffer = ByteArray(COPY_BUFFER)
         for (e in entries) {
             if (isCancelled()) throw CancellationException("CPK write cancelled")
+            onEntry?.invoke(e.path)
             var remaining = e.storedSize
             e.opener().use { input ->
                 while (remaining > 0) {

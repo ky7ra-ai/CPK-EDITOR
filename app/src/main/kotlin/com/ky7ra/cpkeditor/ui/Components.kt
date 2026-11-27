@@ -220,10 +220,10 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 @Composable
 fun FloatingNavBar(selected: AppTab, onSelect: (AppTab) -> Unit, modifier: Modifier = Modifier) {
     val ex = LocalExtras.current
-    Surface(modifier = modifier, shape = CircleShape, color = ex.navBar, shadowElevation = 14.dp) {
+    Surface(modifier = modifier, shape = CircleShape, color = ex.navBar, shadowElevation = 10.dp) {
         Row(
-            Modifier.padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            Modifier.padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AppTab.entries.forEach { tab ->
@@ -231,7 +231,7 @@ fun FloatingNavBar(selected: AppTab, onSelect: (AppTab) -> Unit, modifier: Modif
                 val desc = stringResource(tab.label)
                 Box(
                     Modifier
-                        .size(54.dp)
+                        .size(46.dp)
                         .clip(CircleShape)
                         .background(if (active) ex.navActive else Color.Transparent)
                         .clickable(role = Role.Tab, onClickLabel = desc) { onSelect(tab) },
@@ -249,7 +249,7 @@ fun FloatingNavBar(selected: AppTab, onSelect: (AppTab) -> Unit, modifier: Modif
 }
 
 /** Space a screen should leave at the bottom so the floating nav bar never covers its content. */
-val NavBarSpace: Dp = 96.dp
+val NavBarSpace: Dp = 84.dp
 
 /**
  * "Slide to continue" control: drag the round thumb to the end to trigger [onComplete].
