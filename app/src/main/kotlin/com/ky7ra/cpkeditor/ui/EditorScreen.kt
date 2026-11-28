@@ -3,6 +3,14 @@
 package com.ky7ra.cpkeditor.ui
 
 import android.text.format.Formatter
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -74,6 +82,11 @@ import com.ky7ra.cpkeditor.cpk.CpkBrowse
 import com.ky7ra.cpkeditor.cpk.EntryState
 import com.ky7ra.cpkeditor.cpk.WorkingEntry
 
+private const val SEARCH_KEY = "\u0000search"
+
+/** How many folders deep [dir] is: "" is the root. */
+private fun folderDepth(dir: String): Int = dir.trim('/').let { if (it.isEmpty()) 0 else it.count { c -> c == '/' } + 1 }
+
 private sealed interface ListRow {
     val key: String
 
@@ -122,6 +135,15 @@ fun EditorScreen(
             }
         }
     }
+    fun rowsFor(dir: String): List<ListRow> = buildList {
+        if (searchActive) {
+            CpkBrowse.search(state.entries, state.query).forEach { add(ListRow.File(it, showPath = true)) }
+        } else {
+            val page = CpkBrowse.list(state.entries, dir)
+            page.folders.forEach { add(ListRow.Folder(it)) }
+            page.files.forEach { add(ListRow.File(it, showPath = false)) }
+        }
+    }
     val scopePaths = remember(listing) {
         listing.files.map { it.path } + listing.folders.flatMap { it.filePaths }
     }
@@ -156,7 +178,7 @@ fun EditorScreen(
             onExtractAll = { onExtract(null) },
             onSaveAs = onSaveAs,
             onClose = onCloseProject,
-       )
+        )
 
         val info = state.cpkInfo
         FileCard(
@@ -166,7 +188,7 @@ fun EditorScreen(
                 R.string.file_card_sub,
                 Formatter.formatShortFileSize(context, totalSize),
                 state.entries.size,
-           ),
+            ),
             expanded = infoOpen,
             onToggle = { infoOpen = !infoOpen },
             details = listOf(
@@ -176,8 +198,8 @@ fun EditorScreen(
                     (info?.let { "0x" + it.align.toString(16).uppercase() } ?: "0x800"),
                 stringResource(R.string.stat_changes) to stringResource(R.string.summary_changes, added, replaced),
                 stringResource(R.string.badge_compressed) to compressed.toString(),
-           ),
-       )
+            ),
+        )
         Spacer(Modifier.height(10.dp))
 
         if (searching) {
@@ -196,7 +218,7 @@ fun EditorScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth().focusRequester(focus),
-           )
+            )
             Spacer(Modifier.height(10.dp))
         } else if (state.dir.isNotEmpty()) {
             Breadcrumb(state.dir, onNavigate = vm::enterDir)
@@ -209,42 +231,65 @@ fun EditorScreen(
             color = cs.surface,
             border = BorderStroke(1.dp, ex.cardBorder),
        ) {
-            if (rows.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        stringResource(
-                            when {
-                                searchActive -> R.string.no_results
-                                state.entries.isEmpty() -> R.string.empty_archive
-                                else -> R.string.empty_folder
-                            },
-                       ),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = cs.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(32.dp),
-                   )
+            // Going into a folder slides the list in from the right, going up brings it back from the left.
+            AnimatedContent(
+                targetState = if (searchActive) SEARCH_KEY else state.dir,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    val from = folderDepth(initialState)
+                    val to = folderDepth(targetState)
+                    if (initialState == SEARCH_KEY || targetState == SEARCH_KEY || from == to) {
+                        fadeIn(tween(200)) togetherWith fadeOut(tween(120))
+                    } else {
+                        val dir = if (to > from) 1 else -1
+                        (slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { dir * it / 3 } +
+                            fadeIn(tween(240))) togetherWith
+                            (slideOutHorizontally(tween(240, easing = FastOutSlowInEasing)) { -dir * it / 3 } +
+                                fadeOut(tween(140)))
+                    }
+                },
+                label = "folder",
+            ) { key ->
+                val pageRows = remember(state.entries, state.query, searchActive, key) {
+                    rowsFor(if (key == SEARCH_KEY) state.dir else key)
                 }
-            } else {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 6.dp)) {
-                    itemsIndexed(rows, key = { _, row -> row.key }) { index, row ->
-                        when (row) {
-                            is ListRow.Folder -> FolderRow(
-                                item = row.item,
-                                selected = row.item.filePaths.isNotEmpty() &&
-                                    state.selected.containsAll(row.item.filePaths),
-                                onOpen = { vm.enterDir(row.item.path) },
-                                onToggle = { toggleFolder(row.item) },
-                           )
-                            is ListRow.File -> FileRow(
-                                entry = row.entry,
-                                showPath = row.showPath,
-                                selected = row.entry.path in state.selected,
-                                onToggle = { vm.toggleSelected(row.entry.path) },
-                           )
-                        }
-                        if (index < rows.lastIndex) {
-                            HorizontalDivider(Modifier.padding(start = 64.dp), color = ex.cardBorder)
+                if (pageRows.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            stringResource(
+                                when {
+                                    searchActive -> R.string.no_results
+                                    state.entries.isEmpty() -> R.string.empty_archive
+                                    else -> R.string.empty_folder
+                                },
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = cs.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(32.dp),
+                        )
+                    }
+                } else {
+                    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 6.dp)) {
+                        itemsIndexed(pageRows, key = { _, row -> row.key }) { index, row ->
+                            when (row) {
+                                is ListRow.Folder -> FolderRow(
+                                    item = row.item,
+                                    selected = row.item.filePaths.isNotEmpty() &&
+                                        state.selected.containsAll(row.item.filePaths),
+                                    onOpen = { vm.enterDir(row.item.path) },
+                                    onToggle = { toggleFolder(row.item) },
+                                )
+                                is ListRow.File -> FileRow(
+                                    entry = row.entry,
+                                    showPath = row.showPath,
+                                    selected = row.entry.path in state.selected,
+                                    onToggle = { vm.toggleSelected(row.entry.path) },
+                                )
+                            }
+                            if (index < pageRows.lastIndex) {
+                                HorizontalDivider(Modifier.padding(start = 64.dp), color = ex.cardBorder)
+                            }
                         }
                     }
                 }
@@ -258,14 +303,14 @@ fun EditorScreen(
                 onClick = onAddFiles,
                 enabled = !busy,
                 modifier = Modifier.weight(1f),
-           )
+            )
             if (state.dirty) {
                 PillButton(
                     text = stringResource(R.string.action_save),
                     onClick = onSaveAs,
                     enabled = !busy,
                     modifier = Modifier.weight(1f),
-               )
+                )
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -279,7 +324,7 @@ fun EditorScreen(
                 enabled = !busy && single,
                 onClick = { onReplace(state.selected.first()) },
                 modifier = Modifier.weight(1f),
-           )
+            )
             ActionTile(
                 label = stringResource(R.string.action_extract),
                 icon = ExtractIcon,
@@ -289,7 +334,7 @@ fun EditorScreen(
                 onClick = { onExtract(state.selected) },
                 modifier = Modifier.weight(1f),
                 border = BorderStroke(1.dp, ex.cardBorder),
-           )
+            )
             ActionTile(
                 label = stringResource(R.string.action_delete),
                 icon = Icons.Filled.Delete,
@@ -298,7 +343,7 @@ fun EditorScreen(
                 enabled = !busy && hasSelection,
                 onClick = onDelete,
                 modifier = Modifier.weight(1f),
-           )
+            )
         }
 
         state.progress?.let { progress ->
@@ -331,14 +376,14 @@ private fun EditorTopBar(
             stringResource(R.string.editor_title),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.align(Alignment.Center),
-       )
+        )
         Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onToggleSearch) {
                 Icon(
                     Icons.Filled.Search,
                     contentDescription = stringResource(R.string.action_search),
                     tint = if (searching) MaterialTheme.colorScheme.primary else LocalContentColor.current,
-               )
+                )
             }
             Box {
                 IconButton(onClick = { menu = true }) {
@@ -352,7 +397,7 @@ private fun EditorTopBar(
                             menu = false
                             onSaveAs()
                         },
-                   )
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_add_folder)) },
                         enabled = !busy,
@@ -360,7 +405,7 @@ private fun EditorTopBar(
                             menu = false
                             onAddFolder()
                         },
-                   )
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_select_all)) },
                         enabled = !busy && hasEntries,
@@ -368,7 +413,7 @@ private fun EditorTopBar(
                             menu = false
                             onSelectAll()
                         },
-                   )
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_extract_all)) },
                         enabled = !busy && hasEntries,
@@ -376,7 +421,7 @@ private fun EditorTopBar(
                             menu = false
                             onExtractAll()
                         },
-                   )
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_close)) },
                         enabled = !busy,
@@ -384,7 +429,7 @@ private fun EditorTopBar(
                             menu = false
                             onClose()
                         },
-                   )
+                    )
                 }
             }
         }
@@ -428,7 +473,7 @@ private fun FileCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false),
-                       )
+                        )
                         if (dirty) {
                             Spacer(Modifier.width(8.dp))
                             Box(Modifier.size(8.dp).clip(CircleShape).background(cs.primary))
@@ -440,13 +485,13 @@ private fun FileCard(
                         color = cs.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                   )
+                    )
                 }
                 Icon(
                     Icons.Filled.KeyboardArrowDown,
                     contentDescription = null,
                     modifier = Modifier.graphicsLayer { rotationZ = if (expanded) 180f else 0f },
-               )
+                )
             }
             if (expanded) {
                 HorizontalDivider(color = ex.cardBorder)
@@ -458,7 +503,7 @@ private fun FileCard(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = cs.onSurfaceVariant,
                                 modifier = Modifier.weight(1f),
-                           )
+                            )
                             Text(value, style = MaterialTheme.typography.titleSmall)
                         }
                     }
@@ -500,7 +545,7 @@ private fun Crumb(text: String, current: Boolean, onClick: () -> Unit) {
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-       )
+        )
     }
 }
 
@@ -523,12 +568,12 @@ private fun FolderRow(item: BrowseFolder, selected: Boolean, onOpen: () -> Unit,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-           )
+            )
             Text(
                 stringResource(R.string.item_count, item.itemCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = cs.onSurfaceVariant,
-           )
+            )
         }
         if (selected) {
             CheckDot(true)
@@ -560,7 +605,7 @@ private fun FileRow(entry: WorkingEntry, showPath: Boolean, selected: Boolean, o
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-           )
+            )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     if (showPath && entry.dir.isNotEmpty()) "${entry.dir} • $size" else size,
@@ -569,7 +614,7 @@ private fun FileRow(entry: WorkingEntry, showPath: Boolean, selected: Boolean, o
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
-               )
+                )
                 when {
                     entry.state == EntryState.ADDED ->
                         StatusBadge(stringResource(R.string.badge_new), cs.primary, Color.White)

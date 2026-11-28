@@ -76,7 +76,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
-           )
+            )
             Box(
                 Modifier.size(44.dp).clip(CircleShape).background(cs.primary),
                 contentAlignment = Alignment.Center,
@@ -85,7 +85,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                     name.take(1).uppercase(),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
-               )
+                )
             }
         }
 
@@ -94,7 +94,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                 stringResource(R.string.home_kicker),
                 style = MaterialTheme.typography.bodyLarge,
                 color = cs.onSurfaceVariant,
-           )
+            )
             Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineLarge)
         }
 
@@ -108,7 +108,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                 badgeIcon = cs.primary,
                 onClick = onOpen,
                 modifier = Modifier.weight(1f),
-           )
+            )
             ActionCard(
                 title = stringResource(R.string.action_new),
                 subtitle = stringResource(R.string.home_new_sub),
@@ -119,7 +119,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                 onClick = onNew,
                 modifier = Modifier.weight(1f),
                 border = BorderStroke(1.dp, ex.cardBorder),
-           )
+            )
         }
 
         WorkflowCard()
@@ -182,7 +182,7 @@ private fun ActionCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = content.copy(alpha = 0.8f),
                         modifier = Modifier.weight(1f).padding(end = 8.dp),
-                   )
+                    )
                     Box(
                         Modifier.size(40.dp).clip(CircleShape).background(badge),
                         contentAlignment = Alignment.Center,
@@ -192,7 +192,7 @@ private fun ActionCard(
                             contentDescription = null,
                             tint = badgeIcon,
                             modifier = Modifier.size(20.dp),
-                       )
+                        )
                     }
                 }
             }
@@ -215,17 +215,17 @@ private fun WorkflowCard() {
                 FlowStep(
                     "1", stringResource(R.string.flow_open), stringResource(R.string.flow_open_sub),
                     cs.primary, Color.White, Modifier.weight(1f),
-               )
+                )
                 FlowLink(Modifier.weight(0.35f))
                 FlowStep(
                     "2", stringResource(R.string.flow_edit), stringResource(R.string.flow_edit_sub),
                     ex.tile, ex.onTile, Modifier.weight(1f),
-               )
+                )
                 FlowLink(Modifier.weight(0.35f))
                 FlowStep(
                     "3", stringResource(R.string.flow_save), stringResource(R.string.flow_save_sub),
                     cs.surfaceVariant, cs.onSurface, Modifier.weight(1f),
-               )
+                )
             }
         }
     }
@@ -253,7 +253,7 @@ private fun FlowStep(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-       )
+        )
     }
 }
 

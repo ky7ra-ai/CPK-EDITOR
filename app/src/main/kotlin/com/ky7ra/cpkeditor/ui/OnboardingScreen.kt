@@ -91,7 +91,7 @@ fun OnboardingScreen(onDone: (String) -> Unit) {
             stringResource(R.string.onb_kicker),
             style = MaterialTheme.typography.bodyLarge,
             color = cs.onSurfaceVariant,
-       )
+        )
         Text(stringResource(R.string.onb_title), style = MaterialTheme.typography.headlineLarge)
         Spacer(Modifier.height(14.dp))
 
@@ -105,15 +105,15 @@ fun OnboardingScreen(onDone: (String) -> Unit) {
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 imeAction = ImeAction.Done,
-           ),
+            ),
             keyboardActions = KeyboardActions(onDone = { if (name.isNotBlank()) onDone(name.trim()) }),
-       )
+        )
         Spacer(Modifier.height(14.dp))
         SlideToAct(
             label = stringResource(R.string.onb_slide),
             enabled = name.isNotBlank(),
             onComplete = { onDone(name.trim()) },
-       )
+        )
         if (name.isBlank()) {
             Spacer(Modifier.height(8.dp))
             Text(
@@ -122,7 +122,7 @@ fun OnboardingScreen(onDone: (String) -> Unit) {
                 color = cs.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
-           )
+            )
         }
     }
 }
@@ -137,7 +137,7 @@ private fun HeroCard(modifier: Modifier) {
         targetValue = 4f,
         animationSpec = infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "angle",
-   )
+    )
 
     Box(modifier.clip(RoundedCornerShape(36.dp)).background(cs.surfaceVariant)) {
         Canvas(Modifier.fillMaxSize()) {
@@ -148,7 +148,7 @@ private fun HeroCard(modifier: Modifier) {
                 lerp(Brand.Orange, Color.White, 0.14f),
                 radius = w * 0.46f,
                 center = Offset(w * 0.86f, h * 0.62f),
-           )
+            )
             drawCircle(Color.White.copy(alpha = 0.28f), radius = w * 0.2f, center = Offset(w * 0.5f, h * 0.5f))
             drawCircle(Brand.Ink, radius = w * 0.05f, center = Offset(w * 0.86f, h * 0.2f))
         }
@@ -160,7 +160,7 @@ private fun HeroCard(modifier: Modifier) {
                 contentScale = ContentScale.Fit,
                 alignment = Alignment.BottomCenter,
                 modifier = Modifier.fillMaxSize().padding(top = 24.dp),
-           )
+            )
         } else {
             VersixtyMark(
                 Modifier

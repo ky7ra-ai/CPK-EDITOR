@@ -6,12 +6,15 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ky7ra.cpkeditor.R
@@ -49,10 +53,23 @@ fun CpkEditorApp(vm: CpkViewModel, settings: AppSettings) {
     // The opening animation plays on every launch (it survives rotation, not a fresh start).
     var splashDone by rememberSaveable { mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
-        if (!settings.onboarded) {
-            OnboardingScreen(onDone = settings::completeOnboarding)
-        } else {
-            MainShell(vm, settings)
+        // After "Siapa kamu?" the greeting slides away and the app slides in behind it.
+        AnimatedContent(
+            targetState = settings.onboarded,
+            modifier = Modifier.fillMaxSize(),
+            transitionSpec = {
+                (slideInHorizontally(tween(440, easing = FastOutSlowInEasing)) { it / 3 } +
+                    fadeIn(tween(380, delayMillis = 60))) togetherWith
+                    (slideOutHorizontally(tween(340, easing = FastOutSlowInEasing)) { -it / 3 } +
+                        fadeOut(tween(220)))
+            },
+            label = "root",
+        ) { onboarded ->
+            if (!onboarded) {
+                OnboardingScreen(onDone = settings::completeOnboarding)
+            } else {
+                MainShell(vm, settings)
+            }
         }
         if (!splashDone) SplashScreen(onFinished = { splashDone = true })
     }
@@ -66,6 +83,8 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
     var confirmClose by rememberSaveable { mutableStateOf(false) }
     var tabIndex by rememberSaveable { mutableIntStateOf(0) }
     var searching by rememberSaveable(state.hasProject, state.title) { mutableStateOf(false) }
+    var lastProject by remember { mutableStateOf(state) }
+    if (state.hasProject) lastProject = state
     val tab = AppTab.entries[tabIndex]
     val busy = state.progress != null
     // The editor page is full screen: no floating nav bar, its own back arrow.
@@ -159,28 +178,47 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
                 label = "tabContent",
             ) { page ->
             when (page) {
-                AppTab.Home -> if (!state.hasProject) {
-                    HomeLanding(
-                        name = settings.userName,
-                        onOpen = { openCpk.launch(arrayOf("*/*")) },
-                        onNew = vm::newProject,
-                        bottomInset = NavBarSpace,
-                    )
-                } else {
-                    EditorScreen(
-                        state = state,
-                        vm = vm,
-                        searching = searching,
-                        onSearchingChange = setSearching,
-                        onBack = goBack,
-                        onSaveAs = { saveAs.launch(vm.suggestedSaveName()) },
-                        onAddFiles = { pickFiles.launch(arrayOf("*/*")) },
-                        onAddFolder = { pickFolder.launch(null) },
-                        onExtract = onExtract,
-                        onReplace = onReplace,
-                        onDelete = { confirmDelete = true },
-                        onCloseProject = closeOrConfirm,
-                    )
+                AppTab.Home -> AnimatedContent(
+                    targetState = state.hasProject,
+                    modifier = Modifier.fillMaxSize(),
+                    transitionSpec = {
+                        // Opening a project pushes the editor in from the right; closing slides it back out.
+                        val spec = tween<IntOffset>(380, easing = FastOutSlowInEasing)
+                        if (targetState) {
+                            (slideInHorizontally(spec) { it } + fadeIn(tween(200))) togetherWith
+                                (slideOutHorizontally(spec) { -it / 4 } + fadeOut(tween(260)))
+                        } else {
+                            (slideInHorizontally(spec) { -it / 4 } + fadeIn(tween(260))) togetherWith
+                                (slideOutHorizontally(spec) { it } + fadeOut(tween(200)))
+                        }.apply { targetContentZIndex = if (targetState) 1f else -1f }
+                    },
+                    label = "homeEditor",
+                ) { hasProject ->
+                    // While the editor slides away the project is already closed: keep drawing its last state.
+                    val shown = if (state.hasProject) state else lastProject
+                    if (!hasProject) {
+                        HomeLanding(
+                            name = settings.userName,
+                            onOpen = { openCpk.launch(arrayOf("*/*")) },
+                            onNew = vm::newProject,
+                            bottomInset = NavBarSpace,
+                        )
+                    } else {
+                        EditorScreen(
+                            state = shown,
+                            vm = vm,
+                            searching = searching,
+                            onSearchingChange = setSearching,
+                            onBack = goBack,
+                            onSaveAs = { saveAs.launch(vm.suggestedSaveName()) },
+                            onAddFiles = { pickFiles.launch(arrayOf("*/*")) },
+                            onAddFolder = { pickFolder.launch(null) },
+                            onExtract = onExtract,
+                            onReplace = onReplace,
+                            onDelete = { confirmDelete = true },
+                            onCloseProject = closeOrConfirm,
+                        )
+                    }
                 }
                 AppTab.Settings -> SettingsScreen(settings, NavBarSpace)
                 AppTab.About -> AboutScreen(NavBarSpace)
@@ -198,11 +236,15 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
                             .padding(bottom = NavBarSpace),
                     )
                 }
-                FloatingNavBar(
-                    selected = tab,
-                    onSelect = { tabIndex = it.ordinal },
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp),
-                )
+            }
+            // The bar slips down out of the way when the editor opens and rises back when it closes.
+            AnimatedVisibility(
+                visible = !editorVisible,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp),
+                enter = slideInVertically(tween(340, easing = FastOutSlowInEasing)) { it * 2 } + fadeIn(tween(240)),
+                exit = slideOutVertically(tween(260, easing = FastOutSlowInEasing)) { it * 2 } + fadeOut(tween(160)),
+            ) {
+                FloatingNavBar(selected = tab, onSelect = { tabIndex = it.ordinal })
             }
         }
     }

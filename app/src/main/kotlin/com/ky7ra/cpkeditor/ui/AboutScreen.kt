@@ -73,7 +73,7 @@ fun AboutScreen(bottomInset: Dp) {
                 stringResource(R.string.about_kicker),
                 style = MaterialTheme.typography.bodyLarge,
                 color = cs.onSurfaceVariant,
-           )
+            )
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
         }
 
@@ -91,7 +91,7 @@ fun AboutScreen(bottomInset: Dp) {
                     fontWeight = FontWeight.Black,
                     color = Brand.Orange,
                     modifier = Modifier.align(Alignment.CenterEnd).offset(x = 26.dp),
-               )
+                )
                 VersixtyMark(
                     Modifier.align(Alignment.TopStart).padding(22.dp).size(40.dp),
                     color = Brand.Orange,
@@ -104,12 +104,12 @@ fun AboutScreen(bottomInset: Dp) {
                         stringResource(R.string.app_name),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                   )
+                    )
                     Text(
                         stringResource(R.string.about_version) + " " + versionText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = ex.onTile.copy(alpha = 0.7f),
-                   )
+                    )
                 }
             }
         }
@@ -127,7 +127,7 @@ fun AboutScreen(bottomInset: Dp) {
                 stringResource(R.string.about_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(18.dp),
-           )
+            )
         }
 
         Surface(
@@ -145,12 +145,12 @@ fun AboutScreen(bottomInset: Dp) {
                     contentDescription = null,
                     tint = cs.onSurfaceVariant,
                     modifier = Modifier.size(22.dp),
-               )
+                )
                 Text(
                     stringResource(R.string.about_disclaimer),
                     style = MaterialTheme.typography.bodySmall,
                     color = cs.onSurfaceVariant,
-               )
+                )
             }
         }
 
@@ -194,7 +194,7 @@ private fun InfoRow(label: String, value: String) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = cs.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
-           )
+            )
             Text(value, style = MaterialTheme.typography.titleMedium)
         }
     }
