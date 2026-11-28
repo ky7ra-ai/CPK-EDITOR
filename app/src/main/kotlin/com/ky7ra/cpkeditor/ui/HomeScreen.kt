@@ -68,7 +68,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
             .padding(horizontal = 20.dp)
             .padding(bottom = bottomInset),
         verticalArrangement = Arrangement.spacedBy(18.dp),
-    ) {
+   ) {
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "👋  " + stringResource(R.string.greeting, name),
@@ -76,16 +76,16 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
-            )
+           )
             Box(
                 Modifier.size(44.dp).clip(CircleShape).background(cs.primary),
                 contentAlignment = Alignment.Center,
-            ) {
+           ) {
                 Text(
                     name.take(1).uppercase(),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
-                )
+               )
             }
         }
 
@@ -94,7 +94,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                 stringResource(R.string.home_kicker),
                 style = MaterialTheme.typography.bodyLarge,
                 color = cs.onSurfaceVariant,
-            )
+           )
             Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineLarge)
         }
 
@@ -108,7 +108,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                 badgeIcon = cs.primary,
                 onClick = onOpen,
                 modifier = Modifier.weight(1f),
-            )
+           )
             ActionCard(
                 title = stringResource(R.string.action_new),
                 subtitle = stringResource(R.string.home_new_sub),
@@ -119,7 +119,7 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
                 onClick = onNew,
                 modifier = Modifier.weight(1f),
                 border = BorderStroke(1.dp, ex.cardBorder),
-            )
+           )
         }
 
         WorkflowCard()
@@ -129,13 +129,13 @@ fun HomeLanding(name: String, onOpen: () -> Unit, onNew: () -> Unit, bottomInset
             color = ex.tile,
             contentColor = ex.onTile,
             border = BorderStroke(1.dp, ex.cardBorder),
-        ) {
+       ) {
             Row(
                 Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                ShurikenMark(Modifier.size(30.dp), color = Brand.Orange, hole = ex.tile)
+           ) {
+                VersixtyMark(Modifier.size(30.dp), color = Brand.Orange)
                 Text(
                     stringResource(R.string.tip_text),
                     style = MaterialTheme.typography.bodyMedium,
@@ -165,17 +165,16 @@ private fun ActionCard(
         color = container,
         contentColor = content,
         border = border,
-    ) {
+   ) {
         Box(Modifier.fillMaxWidth().height(190.dp)) {
-            ShurikenMark(
+            VersixtyMark(
                 Modifier.align(Alignment.TopEnd).offset(x = 32.dp, y = (-32).dp).size(130.dp),
                 color = content.copy(alpha = 0.12f),
-                hole = Color.Transparent,
             )
             Column(
                 Modifier.fillMaxSize().padding(18.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
-            ) {
+           ) {
                 Text(title, style = MaterialTheme.typography.titleLarge)
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -183,17 +182,17 @@ private fun ActionCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = content.copy(alpha = 0.8f),
                         modifier = Modifier.weight(1f).padding(end = 8.dp),
-                    )
+                   )
                     Box(
                         Modifier.size(40.dp).clip(CircleShape).background(badge),
                         contentAlignment = Alignment.Center,
-                    ) {
+                   ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             tint = badgeIcon,
                             modifier = Modifier.size(20.dp),
-                        )
+                       )
                     }
                 }
             }
@@ -209,24 +208,24 @@ private fun WorkflowCard() {
         shape = RoundedCornerShape(28.dp),
         color = cs.surface,
         border = BorderStroke(1.dp, ex.cardBorder),
-    ) {
+   ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(stringResource(R.string.flow_title), style = MaterialTheme.typography.titleMedium)
             Row(verticalAlignment = Alignment.Top) {
                 FlowStep(
                     "1", stringResource(R.string.flow_open), stringResource(R.string.flow_open_sub),
                     cs.primary, Color.White, Modifier.weight(1f),
-                )
+               )
                 FlowLink(Modifier.weight(0.35f))
                 FlowStep(
                     "2", stringResource(R.string.flow_edit), stringResource(R.string.flow_edit_sub),
                     ex.tile, ex.onTile, Modifier.weight(1f),
-                )
+               )
                 FlowLink(Modifier.weight(0.35f))
                 FlowStep(
                     "3", stringResource(R.string.flow_save), stringResource(R.string.flow_save_sub),
                     cs.surfaceVariant, cs.onSurface, Modifier.weight(1f),
-                )
+               )
             }
         }
     }
@@ -245,7 +244,7 @@ private fun FlowStep(
         Box(
             Modifier.size(44.dp).clip(CircleShape).background(container),
             contentAlignment = Alignment.Center,
-        ) {
+       ) {
             Text(number, style = MaterialTheme.typography.titleMedium, color = content)
         }
         Text(title, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
@@ -254,7 +253,7 @@ private fun FlowStep(
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-        )
+       )
     }
 }
 

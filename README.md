@@ -16,7 +16,7 @@ yang biasa dipakai modder game (mis. Naruto Storm 4).
 - Hapus file dari CPK.
 - Halaman **Editor CPK**: jelajah per folder (ketuk folder untuk masuk, tekan lama untuk memilih seluruh isinya), kartu info arsip, tombol Ganti / Ekstrak / Hapus, serta kartu progres dengan persentase, file yang sedang diproses, ukuran dan perkiraan waktu.
 - Buat CPK baru dari nol.
-- Ikon shuriken orisinal, animasi pembuka (3 shuriken dilempar dan menancap di tengah, setiap aplikasi dibuka; ketuk untuk melewati), dan animasi perpindahan tab di navbar. Gambar shuriken dibuat dari satu definisi di `tools/gen_shuriken.py` (jalankan `python3 tools/gen_shuriken.py` untuk membuat ulang ikon dan `ShurikenArt.kt`).
+- Logo **Versixty "V6"** (V putih + angka 6 oranye) sebagai ikon aplikasi dan animasi pembuka: tiga potongan logo meluncur masuk dengan garis kecepatan, mengunci sambil logo berputar tegak, lalu segitiga-segitiga kecil meledak keluar dan nama muncul (ketuk untuk melewati). Navbar juga beranimasi saat pindah tab. Logo dibuat dari satu definisi di `tools/gen_logo.py` (jalankan `python3 tools/gen_logo.py` untuk membuat ulang ikon dan `VersixtyArt.kt`).
 - Simpan sebagai CPK baru. File asli tidak pernah diubah; data file ditulis secara streaming (aman untuk file besar).
 - UI modern bernuansa shinobi (oren, putih, hitam) dengan layar sambutan "Siapa kamu?", navbar melayang 3 tab
   (Beranda, Pengaturan, Tentang), dan tema Gelap / Terang / Bawaan sistem.
@@ -42,7 +42,7 @@ gradle :app:testDebugUnitTest
 
 Layar "Siapa kamu?" menampilkan gambar yang kamu simpan sebagai `welcome_character` di folder
 `app/src/main/res/drawable-nodpi/` (format `.png`, `.webp`, atau `.jpg`; gambar transparan paling bagus).
-Contoh: `app/src/main/res/drawable-nodpi/welcome_character.png`. Tanpa file itu, layar menampilkan lambang shuriken.
+Contoh: `app/src/main/res/drawable-nodpi/welcome_character.png`. Tanpa file itu, layar menampilkan logo Versixty.
 Setelah menambahkannya, build ulang (push, atau jalankan workflow *Build APK*). Perhatikan bahwa repo ini publik,
 jadi gambar yang kamu unggah ikut terlihat publik.
 

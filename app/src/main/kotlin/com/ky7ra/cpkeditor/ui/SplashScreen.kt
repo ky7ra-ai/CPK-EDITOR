@@ -2,8 +2,9 @@ package com.ky7ra.cpkeditor.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -11,7 +12,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,18 +23,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ky7ra.cpkeditor.R
@@ -42,32 +49,24 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** One thrown shuriken: where it comes from, where it sticks, and how it spins on the way. */
-private class Throw(
-    val fromX: Float,       // start direction, in screen widths from the centre
-    val fromY: Float,       // same, in screen heights
-    val landX: Float,       // landing offset from the cluster centre, in shuriken sizes
-    val landY: Float,
-    val sizeScale: Float,
-    val landAngle: Float,   // final rotation in degrees
-    val spinTurns: Float,   // full turns while flying (sign = direction)
-    val bend: Float,        // sideways bow of the flight path
-    val delayMs: Long,
-)
+/** Fast start, long soft landing: how the logo pieces slide into place. */
+private val EaseOutExpo = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
 
-private val Throws = listOf(
-    Throw(-1.0f, 0.65f, -0.36f, -0.22f, 1.00f, 18f, 3f, 0.10f, 150),
-    Throw(1.0f, -0.35f, 0.38f, -0.08f, 0.92f, -27f, -3f, -0.10f, 470),
-    Throw(0.15f, -1.0f, 0.02f, 0.38f, 1.06f, 41f, 3f, 0.08f, 790),
-)
+/** Where a logo piece starts, in logo units away from its final spot, and when it is released. */
+private class Entry(val fromX: Float, val fromY: Float, val delayMs: Long)
 
-private const val FLIGHT_MS = 400
-private val Ink = Brand.Ink
+private val VEntry = Entry(-215f, 16f, 0)        // V slides in from the left
+private val StemEntry = Entry(120f, -190f, 90)   // stem of the 6 drops in from the upper right
+private val RingEntry = Entry(190f, 130f, 180)   // bowl of the 6 sweeps in from the lower right
+
+private const val SLIDE_MS = 640
+private const val START_TILT = -20f              // whole logo starts tilted, then snaps upright
+private const val BURST_TRIANGLES = 12
 
 /**
- * Opening animation, played on every launch: three shurikens are thrown in from different sides
- * and stick in the middle of the screen, then the app name appears and the splash fades out.
- * Tap or press Back to skip.
+ * Opening animation, played on every launch: the three pieces of the Versixty "V6" logo slide in
+ * with speed streaks, lock together while the logo snaps upright, a ring of little triangles
+ * bursts out, then the name appears. Tap or press Back to skip.
  */
 @Composable
 fun SplashScreen(onFinished: () -> Unit) {
@@ -77,25 +76,41 @@ fun SplashScreen(onFinished: () -> Unit) {
     }
     BackHandler(onBack = finish)
 
-    val flight = remember { List(Throws.size) { Animatable(0f) } }
-    val impact = remember { List(Throws.size) { Animatable(0f) } }
-    val title = remember { Animatable(0f) }
+    val slide = remember { listOf(Animatable(0f), Animatable(0f), Animatable(0f)) }
+    val tilt = remember { Animatable(START_TILT) }
+    val pop = remember { Animatable(1f) }
+    val burst = remember { Animatable(0f) }
+    val word = remember { Animatable(0f) }
     val exit = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
         coroutineScope {
-            Throws.forEachIndexed { i, t ->
+            listOf(VEntry, StemEntry, RingEntry).forEachIndexed { i, e ->
                 launch {
-                    delay(t.delayMs)
-                    // Constant speed, then an abrupt stop: that is what makes it read as a throw.
-                    flight[i].animateTo(1f, tween(FLIGHT_MS, easing = LinearEasing))
-                    impact[i].animateTo(1f, tween(700, easing = LinearOutSlowInEasing))
+                    delay(e.delayMs)
+                    slide[i].animateTo(1f, tween(SLIDE_MS, easing = EaseOutExpo))
                 }
             }
+            launch {
+                delay(330)
+                tilt.animateTo(0f, spring(dampingRatio = 0.42f, stiffness = 170f))
+            }
+            launch {
+                delay(720)
+                pop.snapTo(1.07f)
+                pop.animateTo(1f, spring(dampingRatio = 0.38f, stiffness = 320f))
+            }
+            launch {
+                delay(720)
+                burst.animateTo(1f, tween(900, easing = LinearOutSlowInEasing))
+            }
+            launch {
+                delay(900)
+                word.animateTo(1f, tween(520, easing = EaseOutExpo))
+            }
         }
-        title.animateTo(1f, tween(380))
-        delay(420)
-        exit.animateTo(1f, tween(320))
+        delay(650)
+        exit.animateTo(1f, tween(300))
         finish()
     }
 
@@ -103,142 +118,143 @@ fun SplashScreen(onFinished: () -> Unit) {
         Modifier
             .fillMaxSize()
             .graphicsLayer { alpha = 1f - exit.value }
-            .background(Ink)
+            .background(Brand.Ink)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { finish() },
     ) {
         val density = LocalDensity.current
-        val base: Dp = (minOf(maxWidth, maxHeight) * 0.34f).coerceIn(90.dp, 150.dp)
-        val basePx = with(density) { base.toPx() }
         val wPx = with(density) { maxWidth.toPx() }
         val hPx = with(density) { maxHeight.toPx() }
-        val centerY = hPx * 0.44f
-        val shakeDp = with(density) { 5.dp.toPx() }
+        // Logo units -> pixels: the mark is about half the narrower screen side wide.
+        val unit = minOf(wPx, hPx) * 0.50f / VersixtyArt.WIDTH
+        val center = Offset(wPx / 2f, hPx * 0.42f)
+        val markHalfH = VersixtyArt.HEIGHT * unit / 2f
 
-        Canvas(
-            Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    // A small jolt on every hit.
-                    var dx = 0f
-                    var dy = 0f
-                    for (a in impact) {
-                        val v = a.value
-                        if (v > 0f && v < 1f) {
-                            val k = (1f - v) * (1f - v)
-                            dx += sin(v * 46f) * shakeDp * k
-                            dy += cos(v * 38f) * shakeDp * 0.6f * k
-                        }
-                    }
-                    translationX = dx
-                    translationY = dy
-                },
-        ) {
-            val center = Offset(wPx / 2f, centerY)
-            // Warm glow that grows with each hit.
-            val glow = (impact.sumOf { it.value.toDouble().coerceIn(0.0, 1.0) }.toFloat() / Throws.size)
-            if (glow > 0f) {
-                drawCircle(
-                    Brush.radialGradient(
-                        listOf(Brand.Orange.copy(alpha = 0.22f * glow), Color.Transparent),
-                        center = center,
-                        radius = basePx * 2.2f,
-                    ),
-                    radius = basePx * 2.2f,
-                    center = center,
-                )
-            }
-            Throws.forEachIndexed { i, t ->
-                drawThrow(t, flight[i].value, impact[i].value, center, basePx, wPx, hPx, i)
-            }
+        Canvas(Modifier.fillMaxSize()) {
+            drawLogo(
+                center = center,
+                unit = unit,
+                tilt = tilt.value,
+                pop = pop.value,
+                slide = slide.map { it.value },
+                burst = burst.value,
+            )
         }
 
-        Text(
-            stringResource(R.string.app_name),
-            color = Color.White,
-            fontSize = 30.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 1.sp,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .offset(y = with(density) { (centerY - hPx / 2f + basePx * 1.35f).toDp() } + 14.dp * (1f - title.value))
-                .alpha(title.value),
-        )
+        Column(
+            Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = with(density) { (center.y + markHalfH).toDp() } + 34.dp)
+                .graphicsLayer {
+                    alpha = word.value
+                    translationY = (1f - word.value) * 18.dp.toPx()
+                    scaleX = 1.12f - 0.12f * word.value
+                    scaleY = scaleX
+                },
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                buildAnnotatedString {
+                    withStyle(SpanStyle(color = Color.White)) { append("VER") }
+                    withStyle(SpanStyle(color = Brand.Orange)) { append("SIXTY") }
+                },
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+                letterSpacing = 5.sp,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                stringResource(R.string.app_name),
+                color = Color.White.copy(alpha = 0.55f),
+                fontSize = 13.sp,
+                letterSpacing = 3.sp,
+            )
+        }
     }
 }
 
-private fun DrawScope.drawThrow(
-    t: Throw,
-    flight: Float,
-    impact: Float,
+private fun DrawScope.drawLogo(
     center: Offset,
-    basePx: Float,
-    w: Float,
-    h: Float,
-    index: Int,
+    unit: Float,
+    tilt: Float,
+    pop: Float,
+    slide: List<Float>,
+    burst: Float,
 ) {
-    if (flight <= 0f) return
-    val land = Offset(center.x + t.landX * basePx, center.y + t.landY * basePx)
-    val start = Offset(center.x + t.fromX * (w * 0.75f + basePx), center.y + t.fromY * (h * 0.75f + basePx))
-    val dist = hypot(land.x - start.x, land.y - start.y)
-    // Unit vector perpendicular to the flight direction, for the slight bow.
-    val dirX = (land.x - start.x) / dist
-    val dirY = (land.y - start.y) / dist
-    val perpX = -dirY
-    val perpY = dirX
-
-    fun posAt(f: Float): Offset {
-        val bow = sin(PI.toFloat() * f) * t.bend * dist
-        return Offset(
-            start.x + (land.x - start.x) * f + perpX * bow,
-            start.y + (land.y - start.y) * f + perpY * bow,
+    // Soft orange glow behind the logo, flaring while the burst plays.
+    val glow = sin(PI.toFloat() * burst.coerceIn(0f, 1f))
+    if (glow > 0f) {
+        val r = unit * VersixtyArt.WIDTH * 1.1f
+        drawCircle(
+            Brush.radialGradient(listOf(Brand.Orange.copy(alpha = 0.26f * glow), Color.Transparent), center, r),
+            radius = r,
+            center = center,
         )
     }
 
-    fun rotAt(f: Float): Float = t.landAngle - 360f * t.spinTurns * (1f - f)
+    // Every piece is drawn in logo units, in one tilted, scaled frame centred on the logo.
+    fun frame(block: DrawScope.() -> Unit) = withTransform({
+        translate(center.x, center.y)
+        rotate(tilt, Offset.Zero)
+        scale(unit * pop, unit * pop, Offset.Zero)
+        translate(-VersixtyArt.CX, -VersixtyArt.CY)
+    }, block)
 
-    val size = basePx * t.sizeScale
-    val flying = flight < 1f
-    if (flying) {
-        // Motion trail: fading ghosts a little behind the shuriken.
-        for (j in 4 downTo 1) {
-            val f = flight - 0.05f * j
-            if (f <= 0f) continue
-            val depth = 0.55f + 0.45f * f
-            drawShuriken(posAt(f), size * depth, rotAt(f), Ink, alpha = 0.20f / j * 1.6f)
+    val entries = listOf(VEntry, StemEntry, RingEntry)
+    val paths = listOf(VersixtyPaths.v, VersixtyPaths.stem, VersixtyPaths.ring)
+    val colors = listOf(VersixtyColors.V, VersixtyColors.Six, VersixtyColors.Six)
+
+    for (i in 0..2) {
+        val p = slide[i]
+        if (p <= 0f) continue
+        val ox = entries[i].fromX * (1f - p)
+        val oy = entries[i].fromY * (1f - p)
+        frame {
+            // Speed streaks trailing behind the moving piece.
+            val dist = hypot(ox, oy)
+            if (dist > 1f) {
+                val dx = ox / dist
+                val dy = oy / dist
+                val fade = Math.pow((1f - p).toDouble(), 0.55).toFloat()
+                val len = minOf(dist, 70f) * fade
+                for ((k, lat) in floatArrayOf(-15f, -2f, 11f).withIndex()) {
+                    val sx = VersixtyArt.CX + ox - dy * lat + dx * (8f + k * 7f)
+                    val sy = VersixtyArt.CY + oy + dx * lat + dy * (8f + k * 7f)
+                    drawLine(
+                        colors[i].copy(alpha = 0.75f * fade),
+                        Offset(sx, sy),
+                        Offset(sx + dx * len * (1f - 0.22f * k), sy + dy * len * (1f - 0.22f * k)),
+                        strokeWidth = 1.5f,
+                        cap = StrokeCap.Round,
+                    )
+                }
+            }
+            // The piece itself.
+            withTransform({ translate(ox, oy) }) { drawPath(paths[i], colors[i]) }
         }
     }
-    val depth = 0.55f + 0.45f * flight
-    // On landing the star "pops" a little, then quivers as it settles in the wood.
-    val pop = 1f + 0.13f * (1f - impact) * cos(impact * 14f)
-    val wobble = if (flying) 0f else sin(impact * 38f) * (1f - impact) * 7f
-    val finalSize = size * depth * (if (flying) 1f else pop)
-    val at = posAt(flight)
 
-    // Soft contact shadow.
-    drawCircle(Color.Black.copy(alpha = 0.35f * depth), radius = finalSize * 0.46f, center = at + Offset(finalSize * 0.04f, finalSize * 0.07f))
-    drawShuriken(at, finalSize, rotAt(flight) + wobble, Ink)
-
-    if (!flying && impact > 0f && impact < 1f) {
-        val fade = 1f - impact
-        // Shockwave ring.
-        drawCircle(
-            Brand.Orange.copy(alpha = 0.7f * fade),
-            radius = size * (0.35f + 0.95f * impact),
-            center = land,
-            style = Stroke(width = size * 0.035f * fade + 1.5f),
-        )
-        // Sparks flying out of the hit.
-        for (n in 0 until 8) {
-            val ang = (n * 45f + index * 17f) * (PI.toFloat() / 180f)
-            val inner = size * (0.34f + 0.42f * impact)
-            val outer = inner + size * 0.16f * fade
-            drawLine(
-                Color(0xFFFFC27A).copy(alpha = fade),
-                Offset(land.x + cos(ang) * inner, land.y + sin(ang) * inner),
-                Offset(land.x + cos(ang) * outer, land.y + sin(ang) * outer),
-                strokeWidth = 3f,
-                cap = StrokeCap.Round,
-            )
+    // Little triangles bursting out of the finished logo.
+    if (burst > 0f && burst < 1f) {
+        val fade = Math.pow((1f - burst).toDouble(), 1.2).toFloat()
+        frame {
+            for (n in 0 until BURST_TRIANGLES) {
+                val ang = (n * (360f / BURST_TRIANGLES) + 12f) * (PI.toFloat() / 180f)
+                val reach = 40f + burst * (46f + (n % 3) * 16f)
+                val size = if (n % 2 == 0) 3.2f else 4.8f
+                val ux = cos(ang)
+                val uy = sin(ang)
+                val bx = VersixtyArt.CX + ux * reach
+                val by = VersixtyArt.CY + uy * reach * 0.8f
+                val tri = Path().apply {
+                    moveTo(bx + ux * size * 1.4f, by + uy * size * 1.4f)
+                    lineTo(bx - uy * size * 0.8f, by + ux * size * 0.8f)
+                    lineTo(bx + uy * size * 0.8f, by - ux * size * 0.8f)
+                    close()
+                }
+                val c = if (n % 3 == 0) Brand.Orange else Color.White.copy(alpha = 0.6f)
+                drawPath(tri, c.copy(alpha = c.alpha * fade))
+            }
         }
     }
 }

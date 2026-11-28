@@ -2,7 +2,7 @@
 
 package com.ky7ra.cpkeditor.ui
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -62,7 +62,7 @@ import com.ky7ra.cpkeditor.R
 /**
  * First-run screen: asks who the user is. The hero card shows the image named
  * `welcome_character` from res/drawable-nodpi when the project contains one, and an
- * original shuriken emblem otherwise.
+ * Versixty logo otherwise.
  */
 @Composable
 fun OnboardingScreen(onDone: (String) -> Unit) {
@@ -77,7 +77,7 @@ fun OnboardingScreen(onDone: (String) -> Unit) {
             .navigationBarsPadding()
             .imePadding()
             .padding(16.dp),
-    ) {
+   ) {
         HeroCard(Modifier.fillMaxWidth().weight(1f))
         Spacer(Modifier.height(20.dp))
 
@@ -91,7 +91,7 @@ fun OnboardingScreen(onDone: (String) -> Unit) {
             stringResource(R.string.onb_kicker),
             style = MaterialTheme.typography.bodyLarge,
             color = cs.onSurfaceVariant,
-        )
+       )
         Text(stringResource(R.string.onb_title), style = MaterialTheme.typography.headlineLarge)
         Spacer(Modifier.height(14.dp))
 
@@ -105,15 +105,15 @@ fun OnboardingScreen(onDone: (String) -> Unit) {
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Words,
                 imeAction = ImeAction.Done,
-            ),
+           ),
             keyboardActions = KeyboardActions(onDone = { if (name.isNotBlank()) onDone(name.trim()) }),
-        )
+       )
         Spacer(Modifier.height(14.dp))
         SlideToAct(
             label = stringResource(R.string.onb_slide),
             enabled = name.isNotBlank(),
             onComplete = { onDone(name.trim()) },
-        )
+       )
         if (name.isBlank()) {
             Spacer(Modifier.height(8.dp))
             Text(
@@ -122,7 +122,7 @@ fun OnboardingScreen(onDone: (String) -> Unit) {
                 color = cs.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
-            )
+           )
         }
     }
 }
@@ -131,13 +131,13 @@ fun OnboardingScreen(onDone: (String) -> Unit) {
 private fun HeroCard(modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
     val welcome = rememberWelcomeImage()
-    val spin = rememberInfiniteTransition(label = "spin")
+    val spin = rememberInfiniteTransition(label = "float")
     val angle by spin.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(14000, easing = LinearEasing), RepeatMode.Restart),
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(tween(2800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "angle",
-    )
+   )
 
     Box(modifier.clip(RoundedCornerShape(36.dp)).background(cs.surfaceVariant)) {
         Canvas(Modifier.fillMaxSize()) {
@@ -148,7 +148,7 @@ private fun HeroCard(modifier: Modifier) {
                 lerp(Brand.Orange, Color.White, 0.14f),
                 radius = w * 0.46f,
                 center = Offset(w * 0.86f, h * 0.62f),
-            )
+           )
             drawCircle(Color.White.copy(alpha = 0.28f), radius = w * 0.2f, center = Offset(w * 0.5f, h * 0.5f))
             drawCircle(Brand.Ink, radius = w * 0.05f, center = Offset(w * 0.86f, h * 0.2f))
         }
@@ -160,15 +160,14 @@ private fun HeroCard(modifier: Modifier) {
                 contentScale = ContentScale.Fit,
                 alignment = Alignment.BottomCenter,
                 modifier = Modifier.fillMaxSize().padding(top = 24.dp),
-            )
+           )
         } else {
-            ShurikenMark(
+            VersixtyMark(
                 Modifier
                     .align(Alignment.Center)
                     .size(150.dp)
                     .graphicsLayer { rotationZ = angle },
                 color = Brand.Ink,
-                hole = Color.White,
             )
         }
 
@@ -180,7 +179,7 @@ private fun HeroCard(modifier: Modifier) {
                 .clip(CircleShape)
                 .background(Brand.Ink),
             contentAlignment = Alignment.Center,
-        ) {
+       ) {
             Text("忍", color = Brand.Orange, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }

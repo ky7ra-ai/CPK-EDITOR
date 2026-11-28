@@ -81,10 +81,10 @@ enum class AppTab(@StringRes val label: Int, val icon: ImageVector, val spinFrom
     About(R.string.nav_about, Icons.Filled.Info, -24f),
 }
 
-/** The app's shuriken motif (same artwork as the launcher icon), in one [color] with a [hole] in the middle. */
+/** The Versixty "V6" logo as a small in-app motif: the V in [color], the 6 in [accent]. */
 @Composable
-fun ShurikenMark(modifier: Modifier = Modifier, color: Color, hole: Color) {
-    Canvas(modifier) { drawShurikenMark(color, hole) }
+fun VersixtyMark(modifier: Modifier = Modifier, color: Color, accent: Color = color) {
+    Canvas(modifier) { drawVersixtyMark(color, accent) }
 }
 
 /** Round selection indicator used by list rows and option cards. */

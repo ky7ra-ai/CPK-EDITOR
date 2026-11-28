@@ -156,7 +156,7 @@ fun EditorScreen(
             onExtractAll = { onExtract(null) },
             onSaveAs = onSaveAs,
             onClose = onCloseProject,
-        )
+       )
 
         val info = state.cpkInfo
         FileCard(
@@ -166,7 +166,7 @@ fun EditorScreen(
                 R.string.file_card_sub,
                 Formatter.formatShortFileSize(context, totalSize),
                 state.entries.size,
-            ),
+           ),
             expanded = infoOpen,
             onToggle = { infoOpen = !infoOpen },
             details = listOf(
@@ -176,8 +176,8 @@ fun EditorScreen(
                     (info?.let { "0x" + it.align.toString(16).uppercase() } ?: "0x800"),
                 stringResource(R.string.stat_changes) to stringResource(R.string.summary_changes, added, replaced),
                 stringResource(R.string.badge_compressed) to compressed.toString(),
-            ),
-        )
+           ),
+       )
         Spacer(Modifier.height(10.dp))
 
         if (searching) {
@@ -196,7 +196,7 @@ fun EditorScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth().focusRequester(focus),
-            )
+           )
             Spacer(Modifier.height(10.dp))
         } else if (state.dir.isNotEmpty()) {
             Breadcrumb(state.dir, onNavigate = vm::enterDir)
@@ -208,7 +208,7 @@ fun EditorScreen(
             shape = RoundedCornerShape(28.dp),
             color = cs.surface,
             border = BorderStroke(1.dp, ex.cardBorder),
-        ) {
+       ) {
             if (rows.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -218,12 +218,12 @@ fun EditorScreen(
                                 state.entries.isEmpty() -> R.string.empty_archive
                                 else -> R.string.empty_folder
                             },
-                        ),
+                       ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = cs.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(32.dp),
-                    )
+                   )
                 }
             } else {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 6.dp)) {
@@ -235,13 +235,13 @@ fun EditorScreen(
                                     state.selected.containsAll(row.item.filePaths),
                                 onOpen = { vm.enterDir(row.item.path) },
                                 onToggle = { toggleFolder(row.item) },
-                            )
+                           )
                             is ListRow.File -> FileRow(
                                 entry = row.entry,
                                 showPath = row.showPath,
                                 selected = row.entry.path in state.selected,
                                 onToggle = { vm.toggleSelected(row.entry.path) },
-                            )
+                           )
                         }
                         if (index < rows.lastIndex) {
                             HorizontalDivider(Modifier.padding(start = 64.dp), color = ex.cardBorder)
@@ -258,14 +258,14 @@ fun EditorScreen(
                 onClick = onAddFiles,
                 enabled = !busy,
                 modifier = Modifier.weight(1f),
-            )
+           )
             if (state.dirty) {
                 PillButton(
                     text = stringResource(R.string.action_save),
                     onClick = onSaveAs,
                     enabled = !busy,
                     modifier = Modifier.weight(1f),
-                )
+               )
             }
         }
         Spacer(Modifier.height(10.dp))
@@ -279,7 +279,7 @@ fun EditorScreen(
                 enabled = !busy && single,
                 onClick = { onReplace(state.selected.first()) },
                 modifier = Modifier.weight(1f),
-            )
+           )
             ActionTile(
                 label = stringResource(R.string.action_extract),
                 icon = ExtractIcon,
@@ -289,7 +289,7 @@ fun EditorScreen(
                 onClick = { onExtract(state.selected) },
                 modifier = Modifier.weight(1f),
                 border = BorderStroke(1.dp, ex.cardBorder),
-            )
+           )
             ActionTile(
                 label = stringResource(R.string.action_delete),
                 icon = Icons.Filled.Delete,
@@ -298,7 +298,7 @@ fun EditorScreen(
                 enabled = !busy && hasSelection,
                 onClick = onDelete,
                 modifier = Modifier.weight(1f),
-            )
+           )
         }
 
         state.progress?.let { progress ->
@@ -331,14 +331,14 @@ private fun EditorTopBar(
             stringResource(R.string.editor_title),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.align(Alignment.Center),
-        )
+       )
         Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onToggleSearch) {
                 Icon(
                     Icons.Filled.Search,
                     contentDescription = stringResource(R.string.action_search),
                     tint = if (searching) MaterialTheme.colorScheme.primary else LocalContentColor.current,
-                )
+               )
             }
             Box {
                 IconButton(onClick = { menu = true }) {
@@ -352,7 +352,7 @@ private fun EditorTopBar(
                             menu = false
                             onSaveAs()
                         },
-                    )
+                   )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_add_folder)) },
                         enabled = !busy,
@@ -360,7 +360,7 @@ private fun EditorTopBar(
                             menu = false
                             onAddFolder()
                         },
-                    )
+                   )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_select_all)) },
                         enabled = !busy && hasEntries,
@@ -368,7 +368,7 @@ private fun EditorTopBar(
                             menu = false
                             onSelectAll()
                         },
-                    )
+                   )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_extract_all)) },
                         enabled = !busy && hasEntries,
@@ -376,7 +376,7 @@ private fun EditorTopBar(
                             menu = false
                             onExtractAll()
                         },
-                    )
+                   )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_close)) },
                         enabled = !busy,
@@ -384,7 +384,7 @@ private fun EditorTopBar(
                             menu = false
                             onClose()
                         },
-                    )
+                   )
                 }
             }
         }
@@ -407,18 +407,18 @@ private fun FileCard(
         color = cs.surface,
         border = BorderStroke(1.dp, ex.cardBorder),
         modifier = Modifier.fillMaxWidth(),
-    ) {
+   ) {
         Column {
             Row(
                 Modifier.clickable(onClick = onToggle).padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
+           ) {
                 Box(
                     Modifier.size(56.dp).clip(RoundedCornerShape(18.dp)).background(ex.tile),
                     contentAlignment = Alignment.Center,
-                ) {
-                    ShurikenMark(Modifier.size(34.dp), color = Brand.Orange, hole = ex.tile)
+               ) {
+                    VersixtyMark(Modifier.size(34.dp), color = Brand.Orange)
                 }
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -428,7 +428,7 @@ private fun FileCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f, fill = false),
-                        )
+                       )
                         if (dirty) {
                             Spacer(Modifier.width(8.dp))
                             Box(Modifier.size(8.dp).clip(CircleShape).background(cs.primary))
@@ -440,13 +440,13 @@ private fun FileCard(
                         color = cs.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                    )
+                   )
                 }
                 Icon(
                     Icons.Filled.KeyboardArrowDown,
                     contentDescription = null,
                     modifier = Modifier.graphicsLayer { rotationZ = if (expanded) 180f else 0f },
-                )
+               )
             }
             if (expanded) {
                 HorizontalDivider(color = ex.cardBorder)
@@ -458,7 +458,7 @@ private fun FileCard(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = cs.onSurfaceVariant,
                                 modifier = Modifier.weight(1f),
-                            )
+                           )
                             Text(value, style = MaterialTheme.typography.titleSmall)
                         }
                     }
@@ -476,7 +476,7 @@ private fun Breadcrumb(dir: String, onNavigate: (String) -> Unit) {
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
+   ) {
         Crumb(stringResource(R.string.crumb_root), current = false) { onNavigate("") }
         segments.forEachIndexed { i, segment ->
             Text("›", color = cs.onSurfaceVariant)
@@ -494,13 +494,13 @@ private fun Crumb(text: String, current: Boolean, onClick: () -> Unit) {
         shape = CircleShape,
         color = if (current) cs.primary else cs.surfaceVariant,
         contentColor = if (current) Color.White else cs.onSurface,
-    ) {
+   ) {
         Text(
             text,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-        )
+       )
     }
 }
 
@@ -515,7 +515,7 @@ private fun FolderRow(item: BrowseFolder, selected: Boolean, onOpen: () -> Unit,
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
+   ) {
         FolderGlyph(Modifier.size(34.dp), color = cs.primary)
         Column(Modifier.weight(1f)) {
             Text(
@@ -523,12 +523,12 @@ private fun FolderRow(item: BrowseFolder, selected: Boolean, onOpen: () -> Unit,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-            )
+           )
             Text(
                 stringResource(R.string.item_count, item.itemCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = cs.onSurfaceVariant,
-            )
+           )
         }
         if (selected) {
             CheckDot(true)
@@ -552,7 +552,7 @@ private fun FileRow(entry: WorkingEntry, showPath: Boolean, selected: Boolean, o
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
+   ) {
         DocGlyph(Modifier.size(34.dp), color = cs.onSurface, lines = cs.surface)
         Column(Modifier.weight(1f)) {
             Text(
@@ -560,7 +560,7 @@ private fun FileRow(entry: WorkingEntry, showPath: Boolean, selected: Boolean, o
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-            )
+           )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     if (showPath && entry.dir.isNotEmpty()) "${entry.dir} • $size" else size,
@@ -569,7 +569,7 @@ private fun FileRow(entry: WorkingEntry, showPath: Boolean, selected: Boolean, o
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
-                )
+               )
                 when {
                     entry.state == EntryState.ADDED ->
                         StatusBadge(stringResource(R.string.badge_new), cs.primary, Color.White)
@@ -595,12 +595,12 @@ private fun AddPill(text: String, onClick: () -> Unit, enabled: Boolean, modifie
         color = cs.primary.copy(alpha = 0.06f),
         contentColor = cs.onSurface,
         border = BorderStroke(1.5.dp, cs.primary),
-    ) {
+   ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
-        ) {
+       ) {
             Icon(Icons.Filled.Add, contentDescription = null, tint = cs.primary, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1)
@@ -627,12 +627,12 @@ private fun ActionTile(
         color = container,
         contentColor = content,
         border = border,
-    ) {
+   ) {
         Column(
             Modifier.fillMaxWidth().padding(vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
+       ) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(22.dp))
             Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1)
         }
