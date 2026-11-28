@@ -16,6 +16,7 @@ yang biasa dipakai modder game (mis. Naruto Storm 4).
 - Hapus file dari CPK.
 - Halaman **Editor CPK**: jelajah per folder (ketuk folder untuk masuk, tekan lama untuk memilih seluruh isinya), kartu info arsip, tombol Ganti / Ekstrak / Hapus, serta kartu progres dengan persentase, file yang sedang diproses, ukuran dan perkiraan waktu.
 - Buat CPK baru dari nol.
+- Ikon shuriken orisinal, animasi pembuka (3 shuriken dilempar dan menancap di tengah, setiap aplikasi dibuka; ketuk untuk melewati), dan animasi perpindahan tab di navbar. Gambar shuriken dibuat dari satu definisi di `tools/gen_shuriken.py` (jalankan `python3 tools/gen_shuriken.py` untuk membuat ulang ikon dan `ShurikenArt.kt`).
 - Simpan sebagai CPK baru. File asli tidak pernah diubah; data file ditulis secara streaming (aman untuk file besar).
 - UI modern bernuansa shinobi (oren, putih, hitam) dengan layar sambutan "Siapa kamu?", navbar melayang 3 tab
   (Beranda, Pengaturan, Tentang), dan tema Gelap / Terang / Bawaan sistem.

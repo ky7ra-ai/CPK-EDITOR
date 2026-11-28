@@ -3,7 +3,12 @@
 package com.ky7ra.cpkeditor.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -37,6 +42,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -66,30 +75,16 @@ import kotlin.math.sin
 import kotlinx.coroutines.launch
 
 /** Bottom navigation destinations. */
-enum class AppTab(@StringRes val label: Int, val icon: ImageVector) {
-    Home(R.string.nav_home, Icons.Filled.Home),
-    Settings(R.string.nav_settings, Icons.Filled.Settings),
-    About(R.string.nav_about, Icons.Filled.Info),
+enum class AppTab(@StringRes val label: Int, val icon: ImageVector, val spinFrom: Float) {
+    Home(R.string.nav_home, Icons.Filled.Home, 0f),
+    Settings(R.string.nav_settings, Icons.Filled.Settings, -160f),
+    About(R.string.nav_about, Icons.Filled.Info, -24f),
 }
 
-/** A four-point throwing star, the app's shinobi motif. [hole] is painted in the middle. */
+/** The app's shuriken motif (same artwork as the launcher icon), in one [color] with a [hole] in the middle. */
 @Composable
 fun ShurikenMark(modifier: Modifier = Modifier, color: Color, hole: Color) {
-    Canvas(modifier) {
-        val r = size.minDimension / 2f
-        val c = Offset(size.width / 2f, size.height / 2f)
-        val path = Path()
-        for (i in 0 until 8) {
-            val radius = if (i % 2 == 0) r else r * 0.3f
-            val angle = Math.toRadians(i * 45.0 - 90.0)
-            val x = c.x + (radius * cos(angle)).toFloat()
-            val y = c.y + (radius * sin(angle)).toFloat()
-            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-        }
-        path.close()
-        drawPath(path, color)
-        drawCircle(hole, radius = r * 0.14f, center = c)
-    }
+    Canvas(modifier) { drawShurikenMark(color, hole) }
 }
 
 /** Round selection indicator used by list rows and option cards. */
@@ -216,35 +211,83 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Floating dark pill with the three destinations; the active one sits in a round highlight. */
+/**
+ * Floating dark pill with the three destinations. The round highlight slides (with a little bounce)
+ * to the chosen tab and the chosen icon pops, so switching tabs feels alive.
+ */
 @Composable
 fun FloatingNavBar(selected: AppTab, onSelect: (AppTab) -> Unit, modifier: Modifier = Modifier) {
     val ex = LocalExtras.current
+    val itemSize = 46.dp
+    val gap = 14.dp
+    val indicatorX by animateDpAsState(
+        targetValue = (itemSize + gap) * selected.ordinal,
+        animationSpec = spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMediumLow),
+        label = "navIndicator",
+    )
+    val density = LocalDensity.current
     Surface(modifier = modifier, shape = CircleShape, color = ex.navBar, shadowElevation = 10.dp) {
-        Row(
-            Modifier.padding(6.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AppTab.entries.forEach { tab ->
-                val active = tab == selected
-                val desc = stringResource(tab.label)
-                Box(
-                    Modifier
-                        .size(46.dp)
-                        .clip(CircleShape)
-                        .background(if (active) ex.navActive else Color.Transparent)
-                        .clickable(role = Role.Tab, onClickLabel = desc) { onSelect(tab) },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        tab.icon,
-                        contentDescription = desc,
-                        tint = if (active) ex.navActiveIcon else ex.navInactiveIcon,
-                    )
+        Box(Modifier.padding(6.dp)) {
+            Box(
+                Modifier
+                    .offset { IntOffset(with(density) { indicatorX.roundToPx() }, 0) }
+                    .size(itemSize)
+                    .clip(CircleShape)
+                    .background(ex.navActive),
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(gap),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AppTab.entries.forEach { tab ->
+                    NavItem(tab, tab == selected, itemSize) { onSelect(tab) }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NavItem(tab: AppTab, active: Boolean, itemSize: Dp, onClick: () -> Unit) {
+    val ex = LocalExtras.current
+    val desc = stringResource(tab.label)
+    val pop = remember { Animatable(1f) }
+    val turn = remember { Animatable(0f) }
+    var first by remember { mutableStateOf(true) }
+    LaunchedEffect(active) {
+        // No animation for the tab that is already selected when the bar first appears.
+        if (active && !first) {
+            launch {
+                pop.snapTo(0.55f)
+                pop.animateTo(1f, spring(dampingRatio = 0.35f, stiffness = 420f))
+            }
+            turn.snapTo(tab.spinFrom)
+            turn.animateTo(0f, spring(dampingRatio = 0.5f, stiffness = 170f))
+        }
+        first = false
+    }
+    val tint by animateColorAsState(
+        if (active) ex.navActiveIcon else ex.navInactiveIcon,
+        animationSpec = tween(220),
+        label = "navTint",
+    )
+    Box(
+        Modifier
+            .size(itemSize)
+            .clip(CircleShape)
+            .clickable(role = Role.Tab, onClickLabel = desc, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            tab.icon,
+            contentDescription = desc,
+            tint = tint,
+            modifier = Modifier.graphicsLayer {
+                scaleX = pop.value
+                scaleY = pop.value
+                rotationZ = turn.value
+            },
+        )
     }
 }
 

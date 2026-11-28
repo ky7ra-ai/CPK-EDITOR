@@ -5,6 +5,14 @@ package com.ky7ra.cpkeditor.ui
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,10 +46,15 @@ import com.ky7ra.cpkeditor.R
 
 @Composable
 fun CpkEditorApp(vm: CpkViewModel, settings: AppSettings) {
-    if (!settings.onboarded) {
-        OnboardingScreen(onDone = settings::completeOnboarding)
-    } else {
-        MainShell(vm, settings)
+    // The opening animation plays on every launch (it survives rotation, not a fresh start).
+    var splashDone by rememberSaveable { mutableStateOf(false) }
+    Box(Modifier.fillMaxSize()) {
+        if (!settings.onboarded) {
+            OnboardingScreen(onDone = settings::completeOnboarding)
+        } else {
+            MainShell(vm, settings)
+        }
+        if (!splashDone) SplashScreen(onFinished = { splashDone = true })
     }
 }
 
@@ -132,7 +145,20 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
         },
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
-            when (tab) {
+            // Pages slide in from the side of the tab you moved towards.
+            AnimatedContent(
+                targetState = tab,
+                modifier = Modifier.fillMaxSize(),
+                transitionSpec = {
+                    val dir = if (targetState.ordinal > initialState.ordinal) 1 else -1
+                    (slideInHorizontally(tween(340, easing = FastOutSlowInEasing)) { dir * it / 5 } +
+                        fadeIn(tween(260, delayMillis = 70))) togetherWith
+                        (slideOutHorizontally(tween(260, easing = FastOutSlowInEasing)) { -dir * it / 5 } +
+                            fadeOut(tween(150)))
+                },
+                label = "tabContent",
+            ) { page ->
+            when (page) {
                 AppTab.Home -> if (!state.hasProject) {
                     HomeLanding(
                         name = settings.userName,
@@ -158,6 +184,7 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
                 }
                 AppTab.Settings -> SettingsScreen(settings, NavBarSpace)
                 AppTab.About -> AboutScreen(NavBarSpace)
+            }
             }
 
             if (!editorVisible) {
