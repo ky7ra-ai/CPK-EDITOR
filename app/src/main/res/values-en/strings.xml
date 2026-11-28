@@ -121,4 +121,8 @@
     <string name="progress_eta">Estimated: %1$s</string>
     <string name="eta_sec">%1$d sec</string>
     <string name="eta_min">%1$d min %2$d sec</string>
+    <string name="exit_title">Exit app?</string>
+    <string name="exit_body">Are you sure you want to exit CPK Editor?</string>
+    <string name="action_yes">Yes</string>
+    <string name="action_no">No</string>
 </resources>

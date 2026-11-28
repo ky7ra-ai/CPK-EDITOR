@@ -16,6 +16,7 @@ yang biasa dipakai modder game (mis. Naruto Storm 4).
 - Hapus file dari CPK.
 - Halaman **Editor CPK**: jelajah per folder (ketuk folder untuk masuk, tekan lama untuk memilih seluruh isinya), kartu info arsip, tombol Ganti / Ekstrak / Hapus, serta kartu progres dengan persentase, file yang sedang diproses, ukuran dan perkiraan waktu.
 - Buat CPK baru dari nol.
+- Ganti tema gelap/terang/sistem dengan transisi warna yang halus. Menekan Back di halaman utama menampilkan dialog konfirmasi keluar (Ya/Tidak).
 - Logo **Versixty "V6"** (V putih + angka 6 oranye) sebagai ikon aplikasi dan animasi pembuka: tiga potongan logo meluncur masuk dengan garis kecepatan, mengunci sambil logo berputar tegak, lalu segitiga-segitiga kecil meledak keluar dan nama muncul (ketuk untuk melewati). Navbar juga beranimasi saat pindah tab. Logo dibuat dari satu definisi di `tools/gen_logo.py` (jalankan `python3 tools/gen_logo.py` untuk membuat ulang ikon dan `VersixtyArt.kt`).
 - Simpan sebagai CPK baru. File asli tidak pernah diubah; data file ditulis secara streaming (aman untuk file besar).
 - UI modern bernuansa shinobi (oren, putih, hitam) dengan layar sambutan "Siapa kamu?", navbar melayang 3 tab

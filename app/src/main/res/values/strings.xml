@@ -122,4 +122,8 @@
     <string name="progress_eta">Perkiraan: %1$s</string>
     <string name="eta_sec">%1$d dtk</string>
     <string name="eta_min">%1$d mnt %2$d dtk</string>
+    <string name="exit_title">Keluar aplikasi?</string>
+    <string name="exit_body">Yakin ingin keluar dari CPK Editor?</string>
+    <string name="action_yes">Ya</string>
+    <string name="action_no">Tidak</string>
 </resources>

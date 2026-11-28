@@ -1,6 +1,10 @@
 package com.ky7ra.cpkeditor.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
@@ -9,7 +13,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,7 +39,8 @@ class AppExtras(
     val cardBorder: Color,
 )
 
-val LocalExtras = staticCompositionLocalOf<AppExtras> { error("AppExtras not provided") }
+// Not a *static* local on purpose: while the theme fades only the readers of a color recompose.
+val LocalExtras = compositionLocalOf<AppExtras> { error("AppExtras not provided") }
 
 private val LightColors = lightColorScheme(
     primary = Brand.Orange,
@@ -135,11 +140,72 @@ private val AppTypography = Typography(
     labelLarge = BaseType.labelLarge.copy(fontWeight = FontWeight.SemiBold),
 )
 
+/** How long colors take to cross-fade when switching between dark and light. */
+private const val THEME_FADE_MS = 500
+
+@Composable
+private fun fade(target: Color): Color =
+    animateColorAsState(target, tween(THEME_FADE_MS, easing = FastOutSlowInEasing), label = "themeColor").value
+
+/** The scheme with every color easing toward its target, so a theme switch fades instead of snapping. */
+@Composable
+private fun ColorScheme.faded(): ColorScheme = copy(
+    primary = fade(primary),
+    onPrimary = fade(onPrimary),
+    primaryContainer = fade(primaryContainer),
+    onPrimaryContainer = fade(onPrimaryContainer),
+    inversePrimary = fade(inversePrimary),
+    secondary = fade(secondary),
+    onSecondary = fade(onSecondary),
+    secondaryContainer = fade(secondaryContainer),
+    onSecondaryContainer = fade(onSecondaryContainer),
+    tertiary = fade(tertiary),
+    onTertiary = fade(onTertiary),
+    tertiaryContainer = fade(tertiaryContainer),
+    onTertiaryContainer = fade(onTertiaryContainer),
+    background = fade(background),
+    onBackground = fade(onBackground),
+    surface = fade(surface),
+    onSurface = fade(onSurface),
+    surfaceVariant = fade(surfaceVariant),
+    onSurfaceVariant = fade(onSurfaceVariant),
+    surfaceTint = fade(surfaceTint),
+    inverseSurface = fade(inverseSurface),
+    inverseOnSurface = fade(inverseOnSurface),
+    error = fade(error),
+    onError = fade(onError),
+    errorContainer = fade(errorContainer),
+    onErrorContainer = fade(onErrorContainer),
+    outline = fade(outline),
+    outlineVariant = fade(outlineVariant),
+    scrim = fade(scrim),
+    surfaceBright = fade(surfaceBright),
+    surfaceDim = fade(surfaceDim),
+    surfaceContainer = fade(surfaceContainer),
+    surfaceContainerHigh = fade(surfaceContainerHigh),
+    surfaceContainerHighest = fade(surfaceContainerHighest),
+    surfaceContainerLow = fade(surfaceContainerLow),
+    surfaceContainerLowest = fade(surfaceContainerLowest),
+)
+
+@Composable
+private fun AppExtras.faded(): AppExtras = AppExtras(
+    navBar = fade(navBar),
+    navActive = fade(navActive),
+    navActiveIcon = fade(navActiveIcon),
+    navInactiveIcon = fade(navInactiveIcon),
+    tile = fade(tile),
+    onTile = fade(onTile),
+    cardBorder = fade(cardBorder),
+)
+
 @Composable
 fun CpkEditorTheme(darkTheme: Boolean, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalExtras provides (if (darkTheme) DarkExtras else LightExtras)) {
+    val colors = (if (darkTheme) DarkColors else LightColors).faded()
+    val extras = (if (darkTheme) DarkExtras else LightExtras).faded()
+    CompositionLocalProvider(LocalExtras provides extras) {
         MaterialTheme(
-            colorScheme = if (darkTheme) DarkColors else LightColors,
+            colorScheme = colors,
             typography = AppTypography,
             shapes = AppShapes,
             content = content,

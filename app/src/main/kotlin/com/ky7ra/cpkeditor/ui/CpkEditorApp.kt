@@ -2,6 +2,9 @@
 
 package com.ky7ra.cpkeditor.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -52,6 +56,8 @@ import com.ky7ra.cpkeditor.R
 fun CpkEditorApp(vm: CpkViewModel, settings: AppSettings) {
     // The opening animation plays on every launch (it survives rotation, not a fresh start).
     var splashDone by rememberSaveable { mutableStateOf(false) }
+    var showExit by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
     Box(Modifier.fillMaxSize()) {
         // After "Siapa kamu?" the greeting slides away and the app slides in behind it.
         AnimatedContent(
@@ -66,17 +72,35 @@ fun CpkEditorApp(vm: CpkViewModel, settings: AppSettings) {
             label = "root",
         ) { onboarded ->
             if (!onboarded) {
+                BackHandler { showExit = true }
                 OnboardingScreen(onDone = settings::completeOnboarding)
             } else {
-                MainShell(vm, settings)
+                MainShell(vm, settings, onRequestExit = { showExit = true })
             }
         }
         if (!splashDone) SplashScreen(onFinished = { splashDone = true })
     }
+
+    if (showExit) {
+        AlertDialog(
+            onDismissRequest = { showExit = false },
+            title = { Text(stringResource(R.string.exit_title)) },
+            text = { Text(stringResource(R.string.exit_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExit = false
+                    context.findActivity()?.finish()
+                }) { Text(stringResource(R.string.action_yes)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExit = false }) { Text(stringResource(R.string.action_no)) }
+            },
+        )
+    }
 }
 
 @Composable
-private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
+private fun MainShell(vm: CpkViewModel, settings: AppSettings, onRequestExit: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
@@ -152,10 +176,11 @@ private fun MainShell(vm: CpkViewModel, settings: AppSettings) {
             searching -> setSearching(false)
             state.selected.isNotEmpty() -> vm.clearSelection()
             state.dir.isNotEmpty() -> vm.goUp()
+            !state.hasProject -> onRequestExit()   // nothing left to go back to: ask before leaving
             else -> closeOrConfirm()
         }
     }
-    BackHandler(enabled = busy || tab != AppTab.Home || state.hasProject) { goBack() }
+    BackHandler { goBack() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -318,4 +343,10 @@ private fun AddDialog(pending: PendingAdd, onConfirm: (String) -> Unit, onDismis
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         },
     )
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
