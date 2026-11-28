@@ -160,7 +160,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             letterSpacing = 1.sp,
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = with(density) { (centerY - hPx / 2f + basePx * 1.35f).toDp() } + (1f - title.value) * 14.dp)
+                .offset(y = with(density) { (centerY - hPx / 2f + basePx * 1.35f).toDp() } + 14.dp * (1f - title.value))
                 .alpha(title.value),
         )
     }
